@@ -1,50 +1,91 @@
-# Welcome to your Expo app 👋
+# WaterTrack
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Eine Trinkwasser-Tracker App für iOS und Android, gebaut mit Expo (React Native) und TypeScript.
 
-## Get started
+## Features
 
-1. Install dependencies
+- **Tagesübersicht** – Animierter Fortschrittsring mit aktuellem Trinkstand
+- **Schnell-Hinzufügen** – 150ml, eigene Bechergrösse, 500ml per Tap
+- **Streak-Tracking** – Aufeinanderfolgende Tage mit erreichtem Tagesziel
+- **7-Tage Verlauf** – Animiertes Balkendiagramm mit Statistiken
+- **Erinnerungen** – Lokale Push-Benachrichtigungen mit einstellbarem Intervall und Nicht-stören-Zeiten
+- **Dark Mode** – Vollständige Unterstützung des System-Farbschemas
+- **Offline** – Alle Daten lokal gespeichert, kein Account nötig
 
-   ```bash
-   npm install
-   ```
+## Tech Stack
 
-2. Start the app
+| | |
+|---|---|
+| Framework | Expo SDK 54 + Expo Router |
+| Sprache | TypeScript (strict) |
+| Speicherung | @react-native-async-storage/async-storage |
+| Benachrichtigungen | expo-notifications |
+| Icons | @expo/vector-icons (Ionicons) |
+| Charts | react-native-svg |
+| Datum | date-fns |
 
-   ```bash
-   npx expo start
-   ```
+## Projektstruktur
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+app/
+  _layout.tsx          # Root Layout
+  (tabs)/
+    index.tsx          # Home Screen (Heute)
+    stats.tsx          # Statistik Screen
+    settings.tsx       # Einstellungen Screen
+components/
+  ProgressRing.tsx     # SVG Fortschrittsring
+  QuickAddButton.tsx   # Schnell-Hinzufügen Button
+  BarChart.tsx         # 7-Tage Balkendiagramm
+  StreakCard.tsx       # Streak & Statistik Karte
+hooks/
+  useWaterData.ts      # Zentraler State Hook
+  useNotifications.ts  # Benachrichtigungen
+constants/
+  theme.ts             # Farben, Abstände, Typografie
+utils/
+  storage.ts           # AsyncStorage Hilfsfunktionen
+  dateHelpers.ts       # Datums-Hilfsfunktionen
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Installation
 
-## Learn more
+```bash
+npm install
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## App starten
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npx expo start
+```
 
-## Join the community
+Dann QR-Code mit der **Expo Go** App scannen (iOS & Android).
 
-Join our community of developers creating universal apps.
+## Auf Gerät testen
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+**Schnell via Expo Go (gleicher WLAN):**
+```bash
+npx expo start
+```
+
+**Als APK via EAS Build:**
+```bash
+npm install -g eas-cli
+eas login
+eas build --platform android --profile preview
+```
+
+**Lokal mit Android Emulator:**
+```bash
+npx expo run:android
+```
+Voraussetzung: Android Studio + `ANDROID_HOME` und `JAVA_HOME` (JDK 17/21) gesetzt.
+
+## Einstellungen
+
+| Option | Standard | Bereich |
+|---|---|---|
+| Tagesziel | 2000 ml | 500 – 5000 ml |
+| Bechergrösse | 250 ml | 50 – 1000 ml |
+| Erinnerungs-Intervall | 2h | 30 min – 8h |
