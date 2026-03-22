@@ -1,0 +1,80 @@
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- App Icon – 1024x1024 ready (100x100 hier) -->
+  <g transform="translate(60, 60)">
+    <rect width="100" height="100" rx="24" fill="#1D9E75"/>
+    <circle cx="50" cy="50" r="30" fill="none" stroke="#ffffff" stroke-width="3" stroke-opacity="0.25"/>
+    <circle cx="50" cy="50" r="30" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"
+      stroke-dasharray="141" stroke-dashoffset="35" transform="rotate(-90 50 50)"/>
+    <path d="M50 26 C50 26 35 43 35 54 C35 62.8 41.7 70 50 70 C58.3 70 65 62.8 65 54 C65 43 50 26 50 26Z" fill="#ffffff"/>
+    <path d="M43 54 C43 50 47 45 50 42" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  </g>
+  <text x="110" y="220" font-family="system-ui, sans-serif" font-size="11" fill="#888888" text-anchor="middle">App Icon</text>
+
+  <!-- Dark Variant -->
+  <g transform="translate(240, 60)">
+    <rect width="100" height="100" rx="24" fill="#0F6E56"/>
+    <circle cx="50" cy="50" r="30" fill="none" stroke="#9FE1CB" stroke-width="3" stroke-opacity="0.3"/>
+    <circle cx="50" cy="50" r="30" fill="none" stroke="#9FE1CB" stroke-width="3.5" stroke-linecap="round"
+      stroke-dasharray="141" stroke-dashoffset="35" transform="rotate(-90 50 50)"/>
+    <path d="M50 26 C50 26 35 43 35 54 C35 62.8 41.7 70 50 70 C58.3 70 65 62.8 65 54 C65 43 50 26 50 26Z" fill="#E1F5EE"/>
+    <path d="M43 54 C43 50 47 45 50 42" stroke="#0F6E56" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  </g>
+  <text x="290" y="220" font-family="system-ui, sans-serif" font-size="11" fill="#888888" text-anchor="middle">Dark Variant</text>
+
+  <!-- Light bg Variant -->
+  <g transform="translate(420, 60)">
+    <rect width="100" height="100" rx="24" fill="#E1F5EE"/>
+    <circle cx="50" cy="50" r="30" fill="none" stroke="#9FE1CB" stroke-width="2.5"/>
+    <circle cx="50" cy="50" r="30" fill="none" stroke="#1D9E75" stroke-width="3" stroke-linecap="round"
+      stroke-dasharray="141" stroke-dashoffset="35" transform="rotate(-90 50 50)"/>
+    <path d="M50 26 C50 26 35 43 35 54 C35 62.8 41.7 70 50 70 C58.3 70 65 62.8 65 54 C65 43 50 26 50 26Z" fill="#1D9E75"/>
+    <path d="M43 54 C43 50 47 45 50 42" stroke="#E1F5EE" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  </g>
+  <text x="470" y="220" font-family="system-ui, sans-serif" font-size="11" fill="#888888" text-anchor="middle">Light BG</text>
+
+  <!-- Wortmarke horizontal -->
+  <g transform="translate(60, 280)">
+    <rect width="340" height="80" rx="16" fill="#F5F5F5"/>
+    <g transform="translate(16, 8)">
+      <rect width="64" height="64" rx="14" fill="#1D9E75"/>
+      <circle cx="32" cy="32" r="19" fill="none" stroke="#ffffff" stroke-width="2" stroke-opacity="0.25"/>
+      <circle cx="32" cy="32" r="19" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"
+        stroke-dasharray="90" stroke-dashoffset="22" transform="rotate(-90 32 32)"/>
+      <path d="M32 16 C32 16 22 27 22 34 C22 40 26.5 45 32 45 C37.5 45 42 40 42 34 C42 27 32 16 32 16Z" fill="#ffffff"/>
+      <path d="M27.5 34 C27.5 31 30 28 32 26" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+    </g>
+    <text x="96" y="34" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#1D9E75">WaterTrack</text>
+    <text x="97" y="56" font-family="system-ui, sans-serif" font-size="13" fill="#5DCAA5" letter-spacing="0.5">Bleib hydratisiert</text>
+  </g>
+  <text x="230" y="380" font-family="system-ui, sans-serif" font-size="11" fill="#888888" text-anchor="middle">Wortmarke horizontal</text>
+
+  <!-- Splash Screen / Dark -->
+  <g transform="translate(440, 260)">
+    <rect width="320" height="120" rx="20" fill="#0F1F1C"/>
+    <g transform="translate(32, 28)">
+      <rect width="64" height="64" rx="14" fill="#085041"/>
+      <circle cx="32" cy="32" r="19" fill="none" stroke="#9FE1CB" stroke-width="2" stroke-opacity="0.4"/>
+      <circle cx="32" cy="32" r="19" fill="none" stroke="#9FE1CB" stroke-width="2.5" stroke-linecap="round"
+        stroke-dasharray="90" stroke-dashoffset="22" transform="rotate(-90 32 32)"/>
+      <path d="M32 16 C32 16 22 27 22 34 C22 40 26.5 45 32 45 C37.5 45 42 40 42 34 C42 27 32 16 32 16Z" fill="#E1F5EE"/>
+      <path d="M27.5 34 C27.5 31 30 28 32 26" stroke="#085041" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+    </g>
+    <text x="114" y="55" font-family="system-ui, sans-serif" font-size="24" font-weight="600" fill="#E1F5EE">WaterTrack</text>
+    <text x="115" y="78" font-family="system-ui, sans-serif" font-size="13" fill="#5DCAA5" letter-spacing="0.5">Bleib hydratisiert</text>
+  </g>
+  <text x="600" y="396" font-family="system-ui, sans-serif" font-size="11" fill="#888888" text-anchor="middle">Splash / Dark</text>
+
+  <!-- Kompakt Inline -->
+  <g transform="translate(60, 450)">
+    <circle cx="20" cy="20" r="16" fill="none" stroke="#E1F5EE" stroke-width="2"/>
+    <circle cx="20" cy="20" r="16" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round"
+      stroke-dasharray="75" stroke-dashoffset="18" transform="rotate(-90 20 20)"/>
+    <path d="M20 8 C20 8 12 17 12 22 C12 26.4 15.6 30 20 30 C24.4 30 28 26.4 28 22 C28 17 20 8 20 8Z" fill="#1D9E75"/>
+    <path d="M17 22 C17 20 19 18 20 17" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+    <text x="46" y="27" font-family="system-ui, sans-serif" font-size="18" font-weight="600" fill="#1D9E75">Water</text>
+    <text x="96" y="27" font-family="system-ui, sans-serif" font-size="18" font-weight="400" fill="#5DCAA5">Track</text>
+  </g>
+  <text x="120" y="510" font-family="system-ui, sans-serif" font-size="11" fill="#888888" text-anchor="middle">Kompakt inline</text>
+
+</svg>

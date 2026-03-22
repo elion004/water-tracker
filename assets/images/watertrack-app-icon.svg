@@ -1,0 +1,36 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="245" fill="#1D9E75"/>
+
+  <!-- Ghost ring (full circle, low opacity) -->
+  <circle cx="512" cy="512" r="307"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="30"
+    stroke-opacity="0.25"/>
+
+  <!-- Progress arc: exactly 270° clockwise from top (512,205) to left (205,512)
+       Gap sits in the top-left quadrant.
+       large-arc-flag=1, sweep-flag=1 (clockwise) -->
+  <path
+    d="M 512 205 A 307 307 0 1 1 205 512"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="36"
+    stroke-linecap="round"/>
+
+  <!-- Water drop -->
+  <path
+    d="M512 252 C512 252 348 450 348 566 C348 657 423 730 512 730 C601 730 676 657 676 566 C676 450 512 252 512 252Z"
+    fill="#ffffff"/>
+
+  <!-- Shine line inside drop -->
+  <path
+    d="M440 566 C440 512 472 462 512 430"
+    fill="none"
+    stroke="#1D9E75"
+    stroke-width="28"
+    stroke-linecap="round"/>
+
+</svg>
