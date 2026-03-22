@@ -1,98 +1,314 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import React, { useState, useRef, useCallback } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+  Animated,
+  Alert,
+  TextInput,
+  Modal,
+  Pressable,
+  ActivityIndicator,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useWaterData } from '@/hooks/useWaterData';
+import { ProgressRing } from '@/components/ProgressRing';
+import { QuickAddButton } from '@/components/QuickAddButton';
+import { StreakCard } from '@/components/StreakCard';
+import { colors, typography, spacing, borderRadius } from '@/constants/theme';
+import { formatDisplayDate, getGreeting, getTodayString } from '@/utils/dateHelpers';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
+  const { todayData, settings, streak, addWater, isLoading } = useWaterData();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const [customModalVisible, setCustomModalVisible] = useState(false);
+  const [customAmount, setCustomAmount] = useState('');
+
+  const toastOpacity = useRef(new Animated.Value(0)).current;
+  const toastTranslateY = useRef(new Animated.Value(20)).current;
+  const [toastText, setToastText] = useState('');
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const bgColor = isDark ? colors.dark.background : colors.background;
+  const textPrimary = isDark ? colors.dark.textPrimary : colors.textPrimary;
+  const textSecondary = isDark ? colors.dark.textSecondary : colors.textSecondary;
+
+  const showToast = useCallback(
+    (text: string) => {
+      setToastText(text);
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+
+      Animated.parallel([
+        Animated.timing(toastOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
+        Animated.timing(toastTranslateY, { toValue: 0, duration: 220, useNativeDriver: true }),
+      ]).start();
+
+      toastTimer.current = setTimeout(() => {
+        Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true }).start(
+          () => {
+            toastTranslateY.setValue(20);
+          }
+        );
+      }, 1800);
+    },
+    [toastOpacity, toastTranslateY]
+  );
+
+  const handleAdd = useCallback(
+    async (ml: number) => {
+      await addWater(ml);
+      showToast(`+${ml}ml hinzugefuegt!`);
+    },
+    [addWater, showToast]
+  );
+
+  const handleCustomAdd = useCallback(() => {
+    const ml = parseInt(customAmount, 10);
+    if (!ml || ml <= 0 || ml > 5000) {
+      Alert.alert('Ungueltige Menge', 'Bitte gib eine Menge zwischen 1 und 5000 ml ein.');
+      return;
+    }
+    setCustomModalVisible(false);
+    setCustomAmount('');
+    handleAdd(ml);
+  }, [customAmount, handleAdd]);
+
+  const goalReached = todayData.totalMl >= settings.goalMl;
+  const remaining = Math.max(settings.goalMl - todayData.totalMl, 0);
+  const today = getTodayString();
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: bgColor }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={[styles.scrollContent, { backgroundColor: bgColor }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={[typography.screenTitle, { color: textPrimary }]}>{getGreeting()}</Text>
+          <Text style={[typography.body, { color: textSecondary, marginTop: spacing.xs }]}>
+            {formatDisplayDate(today)}
+          </Text>
+        </View>
+
+        {/* Progress Ring */}
+        <View style={styles.ringContainer}>
+          <ProgressRing currentMl={todayData.totalMl} goalMl={settings.goalMl} />
+        </View>
+
+        {/* Quick Add Buttons */}
+        <View style={styles.quickButtonsRow}>
+          <QuickAddButton
+            label="+150ml"
+            onPress={() => handleAdd(150)}
+            accessibilityLabel="150 ml hinzufuegen"
+          />
+          <QuickAddButton
+            label={`+${settings.customCupSizeMl}ml`}
+            onPress={() => handleAdd(settings.customCupSizeMl)}
+            accessibilityLabel={`${settings.customCupSizeMl} ml hinzufuegen`}
+          />
+          <QuickAddButton
+            label="+500ml"
+            onPress={() => handleAdd(500)}
+            accessibilityLabel="500 ml hinzufuegen"
+          />
+        </View>
+
+        {/* Custom amount */}
+        <Pressable
+          onPress={() => setCustomModalVisible(true)}
+          accessibilityLabel="Eigene Menge hinzufuegen"
+          accessibilityRole="button"
+          style={({ pressed }) => [
+            styles.customButton,
+            {
+              backgroundColor: pressed ? colors.primaryBg : 'transparent',
+              borderColor: pressed ? colors.primary : isDark ? colors.dark.border : colors.border,
+            },
+          ]}
+        >
+          <Text style={[typography.body, { color: colors.primary }]}>+ Eigene Menge</Text>
+        </Pressable>
+
+        {/* Streak & Info Cards */}
+        <View style={styles.section}>
+          <StreakCard streak={streak} remaining={remaining} goalReached={goalReached} />
+        </View>
+      </ScrollView>
+
+      {/* Toast */}
+      <Animated.View
+        style={[
+          styles.toast,
+          {
+            opacity: toastOpacity,
+            transform: [{ translateY: toastTranslateY }],
+            pointerEvents: 'none',
+          },
+        ]}
+      >
+        <Text style={[typography.body, { color: colors.primaryBg, fontWeight: '500' }]}>
+          {toastText}
+        </Text>
+      </Animated.View>
+
+      {/* Custom Amount Modal */}
+      <Modal
+        visible={customModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCustomModalVisible(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setCustomModalVisible(false)}
+          accessibilityLabel="Modal schliessen"
+        >
+          <Pressable
+            style={[
+              styles.modalContent,
+              { backgroundColor: isDark ? colors.dark.backgroundSecondary : colors.background },
+            ]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text style={[typography.screenTitle, { color: textPrimary, marginBottom: spacing.lg }]}>
+              Menge eingeben
+            </Text>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  color: textPrimary,
+                  borderColor: isDark ? colors.dark.border : colors.border,
+                  backgroundColor: isDark ? colors.dark.background : colors.backgroundSecondary,
+                },
+              ]}
+              placeholder="Menge in ml"
+              placeholderTextColor={textSecondary}
+              keyboardType="numeric"
+              value={customAmount}
+              onChangeText={setCustomAmount}
+              autoFocus
+              accessibilityLabel="Menge in Millilitern"
+            />
+            <View style={styles.modalButtons}>
+              <Pressable
+                onPress={() => {
+                  setCustomModalVisible(false);
+                  setCustomAmount('');
+                }}
+                style={[
+                  styles.modalBtn,
+                  { borderColor: isDark ? colors.dark.border : colors.border },
+                ]}
+                accessibilityLabel="Abbrechen"
+                accessibilityRole="button"
+              >
+                <Text style={[typography.body, { color: textSecondary }]}>Abbrechen</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleCustomAdd}
+                style={[styles.modalBtn, styles.modalBtnPrimary]}
+                accessibilityLabel="Menge hinzufuegen"
+                accessibilityRole="button"
+              >
+                <Text style={[typography.body, { color: colors.white, fontWeight: '600' }]}>
+                  Hinzufuegen
+                </Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  safeArea: { flex: 1 },
+  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  scrollContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: 100,
+  },
+  header: {
+    marginBottom: spacing.xl,
+  },
+  ringContainer: {
     alignItems: 'center',
-    gap: 8,
+    marginBottom: spacing.xl,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  quickButtonsRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.md,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
+  customButton: {
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  section: {
+    marginBottom: spacing.lg,
+  },
+  toast: {
     position: 'absolute',
+    bottom: 80,
+    alignSelf: 'center',
+    backgroundColor: colors.primaryDark,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.pill,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '80%',
+    borderRadius: borderRadius.lg,
+    padding: spacing.xl,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: borderRadius.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    fontSize: 16,
+    marginBottom: spacing.lg,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  modalBtn: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  modalBtnPrimary: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
 });

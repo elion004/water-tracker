@@ -1,53 +1,56 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
+export const colors = {
+  primary: '#1D9E75',
+  primaryLight: '#9FE1CB',
+  primaryBg: '#E1F5EE',
+  primaryDark: '#0F6E56',
 
-import { Platform } from 'react-native';
+  background: '#FFFFFF',
+  backgroundSecondary: '#F5F5F5',
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+  textPrimary: '#1A1A1A',
+  textSecondary: '#888888',
+  textTertiary: '#BBBBBB',
 
-export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
+  border: 'rgba(0,0,0,0.12)',
+  white: '#FFFFFF',
+
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    background: '#121212',
+    backgroundSecondary: '#1E1E1E',
+    textPrimary: '#F0F0F0',
+    textSecondary: '#999999',
+    border: 'rgba(255,255,255,0.12)',
   },
 };
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
+export const typography = {
+  screenTitle: { fontSize: 22, fontWeight: '600' as const },
+  sectionTitle: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase' as const,
   },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});
+  body: { fontSize: 14, fontWeight: '400' as const, lineHeight: 20 },
+  label: { fontSize: 12, fontWeight: '400' as const },
+  small: { fontSize: 10, fontWeight: '400' as const },
+  metricLarge: { fontSize: 28, fontWeight: '600' as const },
+  metricMedium: { fontSize: 18, fontWeight: '500' as const },
+};
+
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  xxl: 32,
+};
+
+export const borderRadius = {
+  sm: 8,
+  md: 10,
+  lg: 16,
+  pill: 24,
+  circle: 9999,
+};
