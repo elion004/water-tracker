@@ -82,19 +82,17 @@ export function ProgressRing({
       </Svg>
 
       <View style={[styles.labelContainer, { width: size, height: size }]}>
+        <Text style={[typography.metricLarge, { color: goalReached ? colors.primary : textColor }]}>
+          {formatMl(currentMl)}
+        </Text>
         {goalReached ? (
-          <Text style={[typography.metricLarge, { color: colors.primary, textAlign: 'center' }]}>
+          <Text style={[typography.label, { color: colors.primary, marginTop: 2 }]}>
             Ziel erreicht! 🎉
           </Text>
         ) : (
-          <>
-            <Text style={[typography.metricLarge, { color: textColor }]}>
-              {formatMl(currentMl)}
-            </Text>
-            <Text style={[typography.label, { color: secondaryColor, marginTop: 2 }]}>
-              von {formatMl(goalMl)}
-            </Text>
-          </>
+          <Text style={[typography.label, { color: secondaryColor, marginTop: 2 }]}>
+            von {formatMl(goalMl)}
+          </Text>
         )}
       </View>
     </View>

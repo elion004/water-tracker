@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   View,
   Text,
@@ -23,7 +24,13 @@ import { formatDisplayDate, getGreeting, getTodayString } from '@/utils/dateHelp
 export default function HomeScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
-  const { todayData, settings, streak, addWater, isLoading } = useWaterData();
+  const { todayData, settings, streak, addWater, reload, isLoading } = useWaterData();
+
+  useFocusEffect(
+    useCallback(() => {
+      reload();
+    }, [reload])
+  );
 
   const [customModalVisible, setCustomModalVisible] = useState(false);
   const [customAmount, setCustomAmount] = useState('');
@@ -61,7 +68,7 @@ export default function HomeScreen() {
   const handleAdd = useCallback(
     async (ml: number) => {
       await addWater(ml);
-      showToast(`+${ml}ml hinzugefuegt!`);
+      showToast(`+${ml}ml hinzugefügt!`);
     },
     [addWater, showToast]
   );
@@ -69,7 +76,7 @@ export default function HomeScreen() {
   const handleCustomAdd = useCallback(() => {
     const ml = parseInt(customAmount, 10);
     if (!ml || ml <= 0 || ml > 5000) {
-      Alert.alert('Ungueltige Menge', 'Bitte gib eine Menge zwischen 1 und 5000 ml ein.');
+      Alert.alert('Ungültige Menge', 'Bitte gib eine Menge zwischen 1 und 5000 ml ein.');
       return;
     }
     setCustomModalVisible(false);
@@ -114,24 +121,24 @@ export default function HomeScreen() {
           <QuickAddButton
             label="+150ml"
             onPress={() => handleAdd(150)}
-            accessibilityLabel="150 ml hinzufuegen"
+            accessibilityLabel="150 ml hinzufügen"
           />
           <QuickAddButton
             label={`+${settings.customCupSizeMl}ml`}
             onPress={() => handleAdd(settings.customCupSizeMl)}
-            accessibilityLabel={`${settings.customCupSizeMl} ml hinzufuegen`}
+            accessibilityLabel={`${settings.customCupSizeMl} ml hinzufügen`}
           />
           <QuickAddButton
             label="+500ml"
             onPress={() => handleAdd(500)}
-            accessibilityLabel="500 ml hinzufuegen"
+            accessibilityLabel="500 ml hinzufügen"
           />
         </View>
 
         {/* Custom amount */}
         <Pressable
           onPress={() => setCustomModalVisible(true)}
-          accessibilityLabel="Eigene Menge hinzufuegen"
+          accessibilityLabel="Eigene Menge hinzufügen"
           accessibilityRole="button"
           style={({ pressed }) => [
             styles.customButton,
@@ -223,11 +230,11 @@ export default function HomeScreen() {
               <Pressable
                 onPress={handleCustomAdd}
                 style={[styles.modalBtn, styles.modalBtnPrimary]}
-                accessibilityLabel="Menge hinzufuegen"
+                accessibilityLabel="Menge hinzufügen"
                 accessibilityRole="button"
               >
                 <Text style={[typography.body, { color: colors.white, fontWeight: '600' }]}>
-                  Hinzufuegen
+                  Hinzufügen
                 </Text>
               </Pressable>
             </View>

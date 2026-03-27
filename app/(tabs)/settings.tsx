@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   View,
   Text,
@@ -44,7 +45,7 @@ function Stepper({ value, onDecrement, onIncrement, formatValue, isDark }: Stepp
       <Pressable
         onPress={onIncrement}
         style={[styles.stepperBtn, { borderColor: borderCol }]}
-        accessibilityLabel="Erhoehen"
+        accessibilityLabel="Erhöhen"
         accessibilityRole="button"
       >
         <Text style={[typography.metricMedium, { color: colors.primary }]}>+</Text>
@@ -123,7 +124,13 @@ function Section({ title, children, isDark }: SectionProps) {
 export default function SettingsScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
-  const { settings, updateSettings, resetAllData, isLoading } = useWaterData();
+  const { settings, updateSettings, resetAllData, reload, isLoading } = useWaterData();
+
+  useFocusEffect(
+    useCallback(() => {
+      reload();
+    }, [reload])
+  );
   const { enableReminders, disableReminders, updateSchedule } = useNotifications();
 
   const bgColor = isDark ? colors.dark.background : colors.background;
@@ -181,12 +188,12 @@ export default function SettingsScreen() {
 
   const handleReset = useCallback(() => {
     Alert.alert(
-      'Alle Daten zuruecksetzen?',
-      'Deine gesamte Trinkhistorie und Einstellungen werden unwiderruflich geloescht.',
+      'Alle Daten zurücksetzen?',
+      'Deine gesamte Trinkhistorie und Einstellungen werden unwiderruflich gelöscht.',
       [
         { text: 'Abbrechen', style: 'cancel' },
         {
-          text: 'Zuruecksetzen',
+          text: 'Zurücksetzen',
           style: 'destructive',
           onPress: async () => {
             await resetAllData();
@@ -268,7 +275,7 @@ export default function SettingsScreen() {
             }
           />
           <Row
-            label="Nicht stoeren"
+            label="Nicht stören"
             subtitle={`${settings.doNotDisturbFrom} – ${settings.doNotDisturbTo}`}
             isDark={isDark}
             right={
@@ -277,7 +284,7 @@ export default function SettingsScreen() {
                 onValueChange={handleDndToggle}
                 trackColor={{ false: colors.border, true: colors.primary }}
                 thumbColor={colors.white}
-                accessibilityLabel="Nicht stoeren aktivieren"
+                accessibilityLabel="Nicht stören aktivieren"
               />
             }
           />
@@ -286,7 +293,7 @@ export default function SettingsScreen() {
         {/* Becher */}
         <Section title="Becher" isDark={isDark}>
           <Row
-            label="Standardgroesse"
+            label="Standardgröße"
             subtitle="Schnellzugabe (mittlerer Button)"
             isDark={isDark}
             right={
@@ -304,7 +311,7 @@ export default function SettingsScreen() {
         {/* Daten */}
         <Section title="Daten" isDark={isDark}>
           <Row
-            label="Alle Daten zuruecksetzen"
+            label="Alle Daten zurücksetzen"
             isDark={isDark}
             destructive
             onPress={handleReset}

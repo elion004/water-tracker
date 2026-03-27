@@ -24,6 +24,7 @@ export interface WaterDataHook {
   addWater: (amountMl: number) => Promise<void>;
   updateSettings: (newSettings: Partial<Settings>) => Promise<void>;
   resetAllData: () => Promise<void>;
+  reload: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -144,6 +145,7 @@ export function useWaterData(): WaterDataHook {
     addWater,
     updateSettings,
     resetAllData,
+    reload: loadAll,
     isLoading,
   };
 }

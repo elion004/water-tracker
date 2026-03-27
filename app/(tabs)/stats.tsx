@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import { useWaterData } from '@/hooks/useWaterData';
 import { BarChart } from '@/components/BarChart';
 import { colors, typography, spacing, borderRadius } from '@/constants/theme';
@@ -43,8 +44,14 @@ function StatCard({
 export default function StatsScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
-  const { weekData, settings, streak, isLoading } = useWaterData();
+  const { weekData, settings, streak, reload, isLoading } = useWaterData();
   const [activeTab, setActiveTab] = useState<TabType>('7days');
+
+  useFocusEffect(
+    useCallback(() => {
+      reload();
+    }, [reload])
+  );
 
   const bgColor = isDark ? colors.dark.background : colors.background;
   const textPrimary = isDark ? colors.dark.textPrimary : colors.textPrimary;
@@ -158,12 +165,12 @@ export default function StatsScreen() {
           <View
             style={[
               styles.achievementCard,
-              { backgroundColor: colors.primaryBg },
+              { backgroundColor: isDark ? '#0d2e22' : colors.primaryBg },
             ]}
             accessibilityLabel={`Streak: ${streak} Tage`}
           >
             <Text style={[typography.metricMedium, { color: colors.primaryDark }]}>
-              {streak === 1 ? 'Erster Tag! Der erste Schritt zaehlt.' : `${streak}-Tage Streak! Weiter so.`}
+              {streak === 1 ? 'Erster Tag! Der erste Schritt zählt.' : `${streak}-Tage Streak! Weiter so.`}
             </Text>
             <Text style={styles.badge}>
               {streak >= 7 ? '🏆' : streak >= 3 ? '🥈' : '🥉'}
