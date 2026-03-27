@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WaterTrack – Datenschutzerklärung</title>
+  <style>
+    :root {
+      --primary:        #1D9E75;
+      --primary-light:  #9FE1CB;
+      --primary-bg:     #E1F5EE;
+      --primary-dark:   #0F6E56;
+      --bg:             #FFFFFF;
+      --bg2:            #F5F5F5;
+      --text:           #1A1A1A;
+      --text2:          #888888;
+      --text3:          #BBBBBB;
+      --border:         rgba(0,0,0,0.10);
+      --radius-lg:      18px;
+      --radius-pill:    999px;
+      --shadow-card:    0 1px 6px rgba(0,0,0,0.07);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:    #121212;
+        --bg2:   #1E1E1E;
+        --text:  #F0F0F0;
+        --text2: #999999;
+        --text3: #555555;
+        --border:rgba(255,255,255,0.10);
+        --shadow-card: 0 1px 8px rgba(0,0,0,0.40);
+        --primary-bg:  #0d2e22;
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg2);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── HERO ─────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(160deg, var(--primary-dark) 0%, var(--primary) 60%, #2bbf8a 100%);
+      color: #fff;
+      padding: 56px 24px 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      top: -80px; right: -60px;
+      pointer-events: none;
+    }
+    .hero-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 72px; height: 72px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 22px;
+      margin-bottom: 18px;
+      backdrop-filter: blur(6px);
+    }
+    .hero-icon svg { width: 36px; height: 36px; stroke: #fff; fill: none; stroke-width: 1.8; }
+    .hero h1 {
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 700;
+      letter-spacing: -0.4px;
+    }
+    .hero p {
+      margin-top: 6px;
+      font-size: 1rem;
+      opacity: 0.85;
+    }
+    .hero .updated {
+      display: inline-block;
+      margin-top: 14px;
+      background: rgba(255,255,255,0.18);
+      border-radius: var(--radius-pill);
+      padding: 4px 14px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+    }
+
+    /* ── CONTENT ──────────────────────────────────────── */
+    main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 32px 16px 80px;
+    }
+
+    /* ── HIGHLIGHT BANNER ─────────────────────────────── */
+    .highlight {
+      background: var(--primary-bg);
+      border: 1px solid rgba(29,158,117,0.2);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 28px;
+    }
+    .highlight svg { width: 26px; height: 26px; stroke: var(--primary); fill: none; stroke-width: 1.8; flex-shrink: 0; margin-top: 1px; }
+    .highlight p { font-size: 0.9rem; color: var(--text2); line-height: 1.6; }
+    .highlight strong { color: var(--text); }
+
+    /* ── SECTION ──────────────────────────────────────── */
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin: 28px 0 10px;
+      padding: 0 4px;
+    }
+
+    .card {
+      background: var(--bg);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    .policy-item {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .policy-item:last-child { border-bottom: none; }
+
+    .policy-item h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .policy-item h3 .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px; height: 22px;
+      background: var(--primary-bg);
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+    .policy-item p, .policy-item ul {
+      font-size: 0.875rem;
+      color: var(--text2);
+      line-height: 1.65;
+    }
+    .policy-item ul {
+      padding-left: 1.2rem;
+      margin-top: 6px;
+    }
+    .policy-item li { margin-bottom: 4px; }
+    .policy-item a { color: var(--primary); text-decoration: none; }
+    .policy-item a:hover { text-decoration: underline; }
+
+    /* ── BACK BUTTON ──────────────────────────────────── */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--primary);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      margin-bottom: 24px;
+      padding: 8px 14px;
+      background: var(--primary-bg);
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(29,158,117,0.15);
+      transition: background 0.2s;
+    }
+    .back-btn:hover { background: rgba(29,158,117,0.18); }
+    .back-btn svg { width: 14px; height: 14px; stroke: var(--primary); fill: none; stroke-width: 2.5; }
+
+    footer {
+      text-align: center;
+      padding: 24px 16px 32px;
+      font-size: 0.8rem;
+      color: var(--text3);
+    }
+    footer a { color: var(--text2); text-decoration: none; }
+    footer a:hover { color: var(--primary); }
+  </style>
+</head>
+<body>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2Z"/></svg>
+    </div>
+    <h1>Datenschutzerklärung</h1>
+    <p>WaterTrack</p>
+    <span class="updated">Zuletzt aktualisiert: März 2026</span>
+  </div>
+
+  <main>
+
+    <a class="back-btn" href="index.html">
+      <svg viewBox="0 0 14 14"><polyline points="9,2 4,7 9,12"/></svg>
+      Zurück zum Support
+    </a>
+
+    <!-- KEY POINT -->
+    <div class="highlight">
+      <svg viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2Z"/></svg>
+      <p><strong>Deine Privatsphäre ist vollständig geschützt.</strong> WaterTrack speichert alle Daten ausschließlich auf deinem Gerät. Kein Account, keine Cloud, kein Tracking – niemals.</p>
+    </div>
+
+    <!-- POLICY SECTIONS -->
+    <p class="section-label">Details</p>
+    <div class="card">
+
+      <div class="policy-item">
+        <h3><span class="num">1</span> Verantwortlicher</h3>
+        <p>Elion Bajrami<br>
+        E-Mail: <a href="mailto:elion004@icloud.com">elion004@icloud.com</a></p>
+      </div>
+
+      <div class="policy-item">
+        <h3><span class="num">2</span> Welche Daten werden erfasst?</h3>
+        <p>WaterTrack speichert ausschließlich folgende Daten <strong>lokal auf deinem Gerät</strong>:</p>
+        <ul>
+          <li>Tägliche Wasserzufuhr (Menge in ml, Zeitstempel)</li>
+          <li>Persönliche Einstellungen (Tagesziel, Erinnerungsintervall, Bechergröße)</li>
+          <li>Streak-Zähler (aufeinanderfolgende Tage mit erreichtem Ziel)</li>
+        </ul>
+      </div>
+
+      <div class="policy-item">
+        <h3><span class="num">3</span> Wo werden die Daten gespeichert?</h3>
+        <p>Alle Daten werden <strong>ausschließlich lokal auf deinem Gerät</strong> über AsyncStorage gespeichert. Es erfolgt keine Übertragung an externe Server, Cloud-Dienste oder Dritte.</p>
+      </div>
+
+      <div class="policy-item">
+        <h3><span class="num">4</span> Welche Daten werden NICHT erfasst?</h3>
+        <ul>
+          <li>Keine personenbezogenen Daten (Name, E-Mail, Adresse)</li>
+          <li>Keine Standortdaten</li>
+          <li>Keine Weitergabe von Gesundheitsdaten an Dritte</li>
+          <li>Keine Analyse- oder Tracking-Tools (kein Google Analytics, kein Firebase)</li>
+          <li>Keine Werbung oder Ad-Tracking</li>
+          <li>Keine Weitergabe von Daten an Dritte</li>
+        </ul>
+      </div>
+
+      <div class="policy-item">
+        <h3><span class="num">5</span> Berechtigungen</h3>
+        <p><strong>Push-Benachrichtigungen</strong> (optional): Werden ausschließlich genutzt, um dich ans Trinken zu erinnern. Alle Erinnerungen werden lokal auf dem Gerät geplant – kein externer Dienst ist beteiligt.</p>
+      </div>
+
+      <div class="policy-item">
+        <h3><span class="num">6</span> Datenlöschung</h3>
+        <p>Du kannst alle gespeicherten Daten jederzeit unter <strong>Einstellungen → Alle Daten zurücksetzen</strong> löschen. Die Deinstallation der App entfernt automatisch alle Daten von deinem Gerät.</p>
+      </div>
+
+      <div class="policy-item">
+        <h3><span class="num">7</span> Kinder</h3>
+        <p>WaterTrack erfasst keine personenbezogenen Daten und ist für alle Altersgruppen geeignet (9+).</p>
+      </div>
+
+      <div class="policy-item">
+        <h3><span class="num">8</span> Änderungen</h3>
+        <p>Diese Datenschutzerklärung kann bei Bedarf aktualisiert werden. Die aktuelle Version ist stets unter dieser URL verfügbar.</p>
+      </div>
+
+      <div class="policy-item">
+        <h3><span class="num">9</span> Kontakt</h3>
+        <p>Bei datenschutzbezogenen Fragen erreichst du uns unter:<br>
+        <a href="mailto:elion004@icloud.com">elion004@icloud.com</a></p>
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer>
+    <p>&copy; 2026 WaterTrack &nbsp;·&nbsp; <a href="index.html">Support</a></p>
+  </footer>
+
+</body>
+</html>

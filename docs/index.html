@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WaterTrack – Support</title>
+  <style>
+    :root {
+      --primary:        #1D9E75;
+      --primary-light:  #9FE1CB;
+      --primary-bg:     #E1F5EE;
+      --primary-dark:   #0F6E56;
+      --bg:             #FFFFFF;
+      --bg2:            #F5F5F5;
+      --text:           #1A1A1A;
+      --text2:          #888888;
+      --text3:          #BBBBBB;
+      --border:         rgba(0,0,0,0.10);
+      --radius-sm:      8px;
+      --radius-md:      12px;
+      --radius-lg:      18px;
+      --radius-pill:    999px;
+      --shadow:         0 2px 16px rgba(29,158,117,0.10);
+      --shadow-card:    0 1px 6px rgba(0,0,0,0.07);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:    #121212;
+        --bg2:   #1E1E1E;
+        --text:  #F0F0F0;
+        --text2: #999999;
+        --text3: #555555;
+        --border:rgba(255,255,255,0.10);
+        --shadow-card: 0 1px 8px rgba(0,0,0,0.40);
+        --primary-bg:  #0d2e22;
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg2);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── HERO ─────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(160deg, var(--primary-dark) 0%, var(--primary) 60%, #2bbf8a 100%);
+      color: #fff;
+      padding: 64px 24px 56px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      width: 340px; height: 340px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      top: -100px; right: -80px;
+      pointer-events: none;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 220px; height: 220px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      bottom: -60px; left: -60px;
+      pointer-events: none;
+    }
+
+    .hero-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 80px; height: 80px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 24px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(6px);
+    }
+    .hero-icon svg { width: 44px; height: 44px; }
+
+    .hero h1 {
+      font-size: clamp(1.8rem, 5vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .hero p {
+      margin-top: 8px;
+      font-size: 1.05rem;
+      opacity: 0.85;
+      font-weight: 400;
+    }
+
+    /* ── CONTENT ──────────────────────────────────────── */
+    main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 16px 80px;
+    }
+
+    /* ── FEATURES STRIP ───────────────────────────────── */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: -28px auto 32px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .feature-card {
+      background: var(--bg);
+      border-radius: var(--radius-lg);
+      padding: 18px 12px;
+      text-align: center;
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border);
+    }
+    .feature-card .icon {
+      font-size: 1.6rem;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .feature-card span:last-child {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text2);
+      line-height: 1.3;
+    }
+
+    /* ── SECTION LABEL ────────────────────────────────── */
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin: 32px 0 10px;
+      padding: 0 4px;
+    }
+
+    /* ── CARD ─────────────────────────────────────────── */
+    .card {
+      background: var(--bg);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    /* ── FAQ ──────────────────────────────────────────── */
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+    }
+    .faq-item:last-child { border-bottom: none; }
+
+    .faq-item input[type="checkbox"] { display: none; }
+
+    .faq-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.95rem;
+      gap: 12px;
+      user-select: none;
+    }
+    .faq-label:hover { background: var(--bg2); }
+
+    .faq-chevron {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--primary-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.25s ease;
+    }
+    .faq-chevron svg {
+      width: 12px; height: 12px;
+      stroke: var(--primary);
+      stroke-width: 2.5;
+      fill: none;
+      transition: transform 0.25s ease;
+    }
+
+    .faq-item input:checked ~ .faq-label .faq-chevron { background: var(--primary); }
+    .faq-item input:checked ~ .faq-label .faq-chevron svg { stroke: #fff; transform: rotate(180deg); }
+
+    .faq-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+    .faq-item input:checked ~ .faq-body {
+      max-height: 300px;
+    }
+    .faq-body-inner {
+      padding: 0 20px 18px;
+      font-size: 0.9rem;
+      color: var(--text2);
+      line-height: 1.65;
+    }
+
+    /* ── CONTACT ──────────────────────────────────────── */
+    .contact-card {
+      background: var(--bg);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-card);
+      padding: 24px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .contact-icon {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      background: var(--primary-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .contact-icon svg { width: 24px; height: 24px; stroke: var(--primary); fill: none; stroke-width: 2; }
+    .contact-text h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .contact-text p {
+      font-size: 0.875rem;
+      color: var(--text2);
+      margin-bottom: 12px;
+    }
+    .contact-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary);
+      color: #fff;
+      padding: 9px 18px;
+      border-radius: var(--radius-pill);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .contact-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .contact-btn:active { transform: translateY(0); }
+
+    /* ── PRIVACY BANNER ───────────────────────────────── */
+    .privacy-banner {
+      background: var(--primary-bg);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border: 1px solid rgba(29,158,117,0.15);
+    }
+    .privacy-banner svg { width: 28px; height: 28px; stroke: var(--primary); fill: none; stroke-width: 1.8; flex-shrink: 0; }
+    .privacy-banner p { font-size: 0.875rem; color: var(--text2); }
+    .privacy-banner a { color: var(--primary); font-weight: 600; text-decoration: none; }
+    .privacy-banner a:hover { text-decoration: underline; }
+
+    /* ── FOOTER ───────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 24px 16px 32px;
+      font-size: 0.8rem;
+      color: var(--text3);
+    }
+    footer a { color: var(--text2); text-decoration: none; }
+    footer a:hover { color: var(--primary); }
+
+    @media (max-width: 480px) {
+      .hero { padding: 48px 16px 48px; }
+      .features { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .contact-card { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-icon">
+      <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22 6C22 6 10 18.5 10 26a12 12 0 0 0 24 0C34 18.5 22 6 22 6Z" fill="white" fill-opacity="0.9"/>
+        <path d="M17 29a6 6 0 0 0 5 5" stroke="rgba(29,158,117,0.6)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h1>WaterTrack</h1>
+    <p>Support &amp; Hilfe-Center</p>
+  </div>
+
+  <main>
+
+    <!-- FEATURE PILLS -->
+    <div class="features">
+      <div class="feature-card">
+        <span class="icon">💧</span>
+        <span>Tagesverbrauch tracken</span>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🔔</span>
+        <span>Smarte Erinnerungen</span>
+      </div>
+      <div class="feature-card">
+        <span class="icon">📊</span>
+        <span>7-Tage Verlauf</span>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <p class="section-label">Häufige Fragen</p>
+    <div class="card">
+
+      <div class="faq-item">
+        <input type="checkbox" id="faq1" />
+        <label class="faq-label" for="faq1">
+          Wie ändere ich mein Tagesziel?
+          <span class="faq-chevron">
+            <svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg>
+          </span>
+        </label>
+        <div class="faq-body">
+          <div class="faq-body-inner">
+            Öffne den Tab <strong>Einstellungen</strong> und passe den Regler „Tagesziel" auf deine gewünschte Menge an (500–5000 ml). Die Änderung wird sofort übernommen.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <input type="checkbox" id="faq2" />
+        <label class="faq-label" for="faq2">
+          Wie richte ich Erinnerungen ein?
+          <span class="faq-chevron">
+            <svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg>
+          </span>
+        </label>
+        <div class="faq-body">
+          <div class="faq-body-inner">
+            Aktiviere unter <strong>Einstellungen</strong> die Option „Erinnerungen" und wähle Intervall sowie Nicht-stören-Zeiten. Die Benachrichtigungen werden lokal auf deinem Gerät geplant – kein Account nötig.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <input type="checkbox" id="faq3" />
+        <label class="faq-label" for="faq3">
+          Wo werden meine Daten gespeichert?
+          <span class="faq-chevron">
+            <svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg>
+          </span>
+        </label>
+        <div class="faq-body">
+          <div class="faq-body-inner">
+            Alle Daten werden <strong>ausschließlich lokal auf deinem Gerät</strong> gespeichert. WaterTrack überträgt keinerlei persönliche Daten an externe Server oder Dritte.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <input type="checkbox" id="faq4" />
+        <label class="faq-label" for="faq4">
+          Wie setze ich meinen Verlauf zurück?
+          <span class="faq-chevron">
+            <svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg>
+          </span>
+        </label>
+        <div class="faq-body">
+          <div class="faq-body-inner">
+            Gehe zu <strong>Einstellungen</strong> und tippe ganz unten auf „Alle Daten zurücksetzen". Dadurch werden alle gespeicherten Daten dauerhaft von deinem Gerät gelöscht.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <input type="checkbox" id="faq5" />
+        <label class="faq-label" for="faq5">
+          Wie funktioniert der Streak-Zähler?
+          <span class="faq-chevron">
+            <svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg>
+          </span>
+        </label>
+        <div class="faq-body">
+          <div class="faq-body-inner">
+            Dein Streak erhöht sich um 1 für jeden aufeinanderfolgenden Tag, an dem du dein Tagesziel erreichst. Ein verpasster Tag setzt den Streak auf 0 zurück. Bleib dran!
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CONTACT -->
+    <p class="section-label">Support kontaktieren</p>
+    <div class="contact-card">
+      <div class="contact-icon">
+        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+      </div>
+      <div class="contact-text">
+        <h3>Schreib uns</h3>
+        <p>Frage, Bug gefunden oder Feature-Wunsch? Wir helfen gerne weiter.</p>
+        <a class="contact-btn" href="mailto:elion004@icloud.com">
+          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="16" height="12" rx="2"/><polyline points="2,4 10,11 18,4"/></svg>
+          E-Mail senden
+        </a>
+      </div>
+    </div>
+
+    <!-- PRIVACY -->
+    <p class="section-label">Datenschutz</p>
+    <div class="privacy-banner">
+      <svg viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2Z"/></svg>
+      <p>WaterTrack erfasst <strong>keine persönlichen Daten</strong>. Alles bleibt auf deinem Gerät. Lies unsere vollständige <a href="privacy.html">Datenschutzerklärung</a>.</p>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>&copy; 2026 WaterTrack &nbsp;·&nbsp; <a href="privacy.html">Datenschutzerklärung</a></p>
+  </footer>
+
+</body>
+</html>
