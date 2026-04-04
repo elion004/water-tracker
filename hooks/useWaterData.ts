@@ -14,8 +14,8 @@ import {
   EMPTY_DAY,
 } from '@/utils/storage';
 import { getTodayString, getLastNDays, getDateString } from '@/utils/dateHelpers';
-import { subDays } from 'date-fns';
-import { syncWidgetData } from '@/utils/widgetData';
+import { subDays, parseISO, format } from 'date-fns';
+import { syncWidgetData, loadWidgetPending, clearWidgetPending } from '@/utils/widgetData';
 
 export interface WaterDataHook {
   todayData: DayData;
@@ -64,6 +64,16 @@ export function useWaterData(): WaterDataHook {
   const loadAll = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Process any water additions made via the widget while the app was closed
+      const pending = await loadWidgetPending();
+      if (pending.length > 0) {
+        for (const entry of pending) {
+          const date = format(parseISO(entry.timestamp), 'yyyy-MM-dd');
+          await addWaterEntry(date, entry.amountMl);
+        }
+        await clearWidgetPending();
+      }
+
       const [loadedSettings, loadedStreak] = await Promise.all([
         loadSettings(),
         loadStreak(),

@@ -1,5 +1,67 @@
+import AppIntents
 import WidgetKit
 import SwiftUI
+
+// MARK: - Pending Entry
+
+struct PendingEntry: Codable {
+    let amountMl: Int
+    let timestamp: String
+}
+
+// MARK: - App Intent
+
+struct AddWaterIntent: AppIntent {
+    static var title: LocalizedStringResource = "Wasser hinzufügen"
+    static var description = IntentDescription("Fügt Wasser zum Tagesziel hinzu.")
+
+    @Parameter(title: "Menge (ml)")
+    var amountMl: Int
+
+    init() { self.amountMl = 250 }
+    init(amountMl: Int) { self.amountMl = amountMl }
+
+    private let appGroup = "group.com.elionbajrami.watertracker"
+    private let widgetKey = "waterWidgetData"
+    private let pendingKey = "waterWidgetPending"
+
+    func perform() async throws -> some IntentResult {
+        guard let defaults = UserDefaults(suiteName: appGroup) else {
+            return .result()
+        }
+
+        // Update widget display data
+        if let json = defaults.string(forKey: widgetKey),
+           let data = json.data(using: .utf8),
+           var decoded = try? JSONDecoder().decode(WaterWidgetData.self, from: data) {
+            decoded.totalMl += amountMl
+            decoded.lastUpdated = ISO8601DateFormatter().string(from: Date())
+            if let encoded = try? JSONEncoder().encode(decoded),
+               let str = String(data: encoded, encoding: .utf8) {
+                defaults.set(str, forKey: widgetKey)
+            }
+        }
+
+        // Append to pending additions so the app can sync on next open
+        var pending: [PendingEntry] = []
+        if let json = defaults.string(forKey: pendingKey),
+           let data = json.data(using: .utf8),
+           let decoded = try? JSONDecoder().decode([PendingEntry].self, from: data) {
+            pending = decoded
+        }
+        pending.append(PendingEntry(
+            amountMl: amountMl,
+            timestamp: ISO8601DateFormatter().string(from: Date())
+        ))
+        if let encoded = try? JSONEncoder().encode(pending),
+           let str = String(data: encoded, encoding: .utf8) {
+            defaults.set(str, forKey: pendingKey)
+        }
+
+        WidgetCenter.shared.reloadAllTimelines()
+        return .result()
+    }
+}
 
 // MARK: - Data Model
 
@@ -46,7 +108,6 @@ struct WaterProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<WaterEntry>) -> Void) {
         let entry = WaterEntry(date: Date(), data: loadData())
-        // Refresh every 15 minutes or when app writes new data
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: Date())!
         completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
     }
@@ -59,9 +120,8 @@ struct WaterEntry: TimelineEntry {
 
 // MARK: - Colors & Helpers
 
-private let brandGreen = Color(red: 0.114, green: 0.620, blue: 0.459)   // #1D9E75
-private let brandGreenDark = Color(red: 0.059, green: 0.431, blue: 0.337) // #0F6E56
-private let brandBlue = Color(red: 0.180, green: 0.620, blue: 0.859)    // #2E9EDC
+private let brandGreen = Color(red: 0.114, green: 0.620, blue: 0.459)
+private let brandGreenDark = Color(red: 0.059, green: 0.431, blue: 0.337)
 
 extension WaterWidgetData {
     var progressFraction: Double {
@@ -116,6 +176,31 @@ struct ProgressRingView: View {
     }
 }
 
+// MARK: - Quick Add Button
+
+struct QuickAddButton: View {
+    let amountMl: Int
+
+    var label: String {
+        amountMl >= 1000
+            ? String(format: "+%.1fL", Double(amountMl) / 1000)
+            : "+\(amountMl)"
+    }
+
+    var body: some View {
+        Button(intent: AddWaterIntent(amountMl: amountMl)) {
+            Text(label)
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundColor(brandGreen)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(Color.white)
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 // MARK: - Small Widget
 
 struct SmallWidgetView: View {
@@ -131,11 +216,7 @@ struct SmallWidgetView: View {
 
             VStack(spacing: 6) {
                 ZStack {
-                    ProgressRingView(
-                        progress: data.progressFraction,
-                        lineWidth: 8,
-                        size: 72
-                    )
+                    ProgressRingView(progress: data.progressFraction, lineWidth: 8, size: 72)
                     VStack(spacing: 1) {
                         Text(data.totalLiters)
                             .font(.system(size: 14, weight: .bold, design: .rounded))
@@ -156,16 +237,7 @@ struct SmallWidgetView: View {
                         .foregroundColor(.white.opacity(0.85))
                 }
 
-                if data.streak > 0 {
-                    HStack(spacing: 3) {
-                        Image(systemName: "flame.fill")
-                            .font(.system(size: 9))
-                            .foregroundColor(.orange)
-                        Text("\(data.streak) Tage")
-                            .font(.system(size: 9, weight: .medium, design: .rounded))
-                            .foregroundColor(.white.opacity(0.75))
-                    }
-                }
+                QuickAddButton(amountMl: 250)
             }
             .padding(10)
         }
@@ -188,11 +260,7 @@ struct MediumWidgetView: View {
             HStack(spacing: 16) {
                 // Left: Progress ring
                 ZStack {
-                    ProgressRingView(
-                        progress: data.progressFraction,
-                        lineWidth: 10,
-                        size: 90
-                    )
+                    ProgressRingView(progress: data.progressFraction, lineWidth: 10, size: 90)
                     VStack(spacing: 2) {
                         Text(data.totalLiters)
                             .font(.system(size: 16, weight: .bold, design: .rounded))
@@ -203,7 +271,7 @@ struct MediumWidgetView: View {
                     }
                 }
 
-                // Right: Stats + action
+                // Right: Stats + quick-add buttons
                 VStack(alignment: .leading, spacing: 8) {
                     // Progress bar
                     VStack(alignment: .leading, spacing: 4) {
@@ -230,7 +298,7 @@ struct MediumWidgetView: View {
                     }
 
                     // Status row
-                    HStack(spacing: 12) {
+                    HStack {
                         if data.isGoalReached {
                             Label("Ziel erreicht!", systemImage: "checkmark.seal.fill")
                                 .font(.system(size: 11, weight: .semibold))
@@ -265,19 +333,11 @@ struct MediumWidgetView: View {
                         }
                     }
 
-                    // Deep link button
-                    Link(destination: URL(string: "watertracker://add")!) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 12))
-                            Text("Wasser hinzufügen")
-                                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                        }
-                        .foregroundColor(brandGreen)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Color.white)
-                        .clipShape(Capsule())
+                    // Quick-add buttons
+                    HStack(spacing: 6) {
+                        QuickAddButton(amountMl: 150)
+                        QuickAddButton(amountMl: 250)
+                        QuickAddButton(amountMl: 500)
                     }
                 }
                 .frame(maxWidth: .infinity)
