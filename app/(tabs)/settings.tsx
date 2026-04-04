@@ -124,7 +124,7 @@ function Section({ title, children, isDark }: SectionProps) {
 export default function SettingsScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
-  const { settings, updateSettings, resetAllData, reload, isLoading } = useWaterData();
+  const { settings, updateSettings, resetAllData, seedTestData, reload, isLoading } = useWaterData();
 
   useFocusEffect(
     useCallback(() => {
@@ -185,6 +185,22 @@ export default function SettingsScreen() {
     },
     [settings, updateSettings, updateSchedule]
   );
+
+  const handleSeedTestData = useCallback(() => {
+    Alert.alert(
+      'Testdaten laden?',
+      '7 Tage mit realistischen Einträgen werden eingefügt (vorhandene Daten werden überschrieben).',
+      [
+        { text: 'Abbrechen', style: 'cancel' },
+        {
+          text: 'Laden',
+          onPress: async () => {
+            await seedTestData();
+          },
+        },
+      ]
+    );
+  }, [seedTestData]);
 
   const handleReset = useCallback(() => {
     Alert.alert(
@@ -310,6 +326,12 @@ export default function SettingsScreen() {
 
         {/* Daten */}
         <Section title="Daten" isDark={isDark}>
+          <Row
+            label="Testdaten laden"
+            subtitle="7 Tage Beispieldaten einfügen"
+            isDark={isDark}
+            onPress={handleSeedTestData}
+          />
           <Row
             label="Alle Daten zurücksetzen"
             isDark={isDark}

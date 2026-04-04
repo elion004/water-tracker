@@ -10,6 +10,7 @@ import {
   loadStreak,
   saveStreak,
   resetAllData as storageResetAll,
+  seedTestData as storageSeedTestData,
   DEFAULT_SETTINGS,
   EMPTY_DAY,
 } from '@/utils/storage';
@@ -24,6 +25,7 @@ export interface WaterDataHook {
   addWater: (amountMl: number) => Promise<void>;
   updateSettings: (newSettings: Partial<Settings>) => Promise<void>;
   resetAllData: () => Promise<void>;
+  seedTestData: () => Promise<void>;
   reload: () => Promise<void>;
   isLoading: boolean;
 }
@@ -137,6 +139,11 @@ export function useWaterData(): WaterDataHook {
     setStreak(0);
   }, []);
 
+  const seedTestData = useCallback(async () => {
+    await storageSeedTestData();
+    await loadAll();
+  }, [loadAll]);
+
   return {
     todayData,
     weekData,
@@ -145,6 +152,7 @@ export function useWaterData(): WaterDataHook {
     addWater,
     updateSettings,
     resetAllData,
+    seedTestData,
     reload: loadAll,
     isLoading,
   };
