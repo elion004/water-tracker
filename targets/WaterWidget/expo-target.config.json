@@ -1,10 +1,5 @@
 {
   "type": "widget",
   "name": "WaterWidget",
-  "deploymentTarget": "17.0",
-  "entitlements": {
-    "com.apple.security.application-groups": [
-      "group.com.elionbajrami.watertracker"
-    ]
-  }
+  "deploymentTarget": "17.0"
 }
