@@ -2,7 +2,7 @@
   "expo": {
     "name": "WaterTrack",
     "slug": "water-tracker",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/watertrack-app-icon.png",
     "scheme": "watertracker",
@@ -13,6 +13,11 @@
       "bundleIdentifier": "com.elionbajrami.watertracker",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.com.elionbajrami.watertracker"
+        ]
       }
     },
     "android": {
@@ -42,7 +47,8 @@
           }
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      "@bacons/apple-targets"
     ],
     "experiments": {
       "typedRoutes": true,

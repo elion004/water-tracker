@@ -15,6 +15,7 @@ import {
 } from '@/utils/storage';
 import { getTodayString, getLastNDays, getDateString } from '@/utils/dateHelpers';
 import { subDays } from 'date-fns';
+import { syncWidgetData } from '@/utils/widgetData';
 
 export interface WaterDataHook {
   todayData: DayData;
@@ -84,6 +85,13 @@ export function useWaterData(): WaterDataHook {
       if (computedStreak !== loadedStreak) {
         await saveStreak(computedStreak);
       }
+
+      syncWidgetData({
+        totalMl: todayLoaded.totalMl,
+        goalMl: loadedSettings.goalMl,
+        streak: computedStreak,
+        lastUpdated: new Date().toISOString(),
+      });
     } finally {
       setIsLoading(false);
     }
@@ -113,19 +121,34 @@ export function useWaterData(): WaterDataHook {
         const computedStreak = computeStreak(prev, settings.goalMl);
         setStreak(computedStreak);
         saveStreak(computedStreak);
+        syncWidgetData({
+          totalMl: updated.totalMl,
+          goalMl: settings.goalMl,
+          streak: computedStreak,
+          lastUpdated: new Date().toISOString(),
+        });
         return prev;
       });
     },
     [settings.goalMl]
   );
 
-  const updateSettings = useCallback(async (newSettings: Partial<Settings>) => {
-    setSettings((prev) => {
-      const updated = { ...prev, ...newSettings };
-      saveSettings(updated);
-      return updated;
-    });
-  }, []);
+  const updateSettings = useCallback(
+    async (newSettings: Partial<Settings>) => {
+      setSettings((prev) => {
+        const updated = { ...prev, ...newSettings };
+        saveSettings(updated);
+        syncWidgetData({
+          totalMl: todayData.totalMl,
+          goalMl: updated.goalMl,
+          streak,
+          lastUpdated: new Date().toISOString(),
+        });
+        return updated;
+      });
+    },
+    [todayData.totalMl, streak]
+  );
 
   const resetAllData = useCallback(async () => {
     await storageResetAll();
@@ -135,6 +158,12 @@ export function useWaterData(): WaterDataHook {
     setWeekData(getLastNDays(7).map((d) => EMPTY_DAY(d)));
     setSettings(DEFAULT_SETTINGS);
     setStreak(0);
+    syncWidgetData({
+      totalMl: 0,
+      goalMl: DEFAULT_SETTINGS.goalMl,
+      streak: 0,
+      lastUpdated: new Date().toISOString(),
+    });
   }, []);
 
   return {
