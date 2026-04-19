@@ -1,10 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import {
   DayData,
   Settings,
   loadDayData,
-  saveDayData,
   addWaterEntry,
   loadSettings,
   saveSettings,
@@ -61,7 +60,6 @@ export function useWaterData(): WaterDataHook {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [streak, setStreak] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const lastLoadedDate = useRef(getTodayString());
 
   const loadAll = useCallback(async () => {
     setIsLoading(true);
@@ -118,7 +116,6 @@ export function useWaterData(): WaterDataHook {
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
       if (state === 'active') {
-        lastLoadedDate.current = getTodayString();
         loadAll();
       }
     });
