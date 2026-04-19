@@ -58,8 +58,35 @@ RCT_EXTERN_METHOD(updateWidget:(NSString *)jsonData)
   config = withXcodeProject(config, (config) => {
     const xcodeProject = config.modResults;
     const appName = config.modRequest.projectName;
-    xcodeProject.addSourceFile(`${appName}/WidgetBridge.swift`, {}, appName);
-    xcodeProject.addSourceFile(`${appName}/WidgetBridge.m`, {}, appName);
+
+    // Find main app target UUID
+    const nativeTargets = xcodeProject.pbxNativeTargetSection();
+    let mainTargetUUID;
+    for (const uuid of Object.keys(nativeTargets)) {
+      if (uuid.endsWith('_comment')) continue;
+      if (nativeTargets[uuid].productType === '"com.apple.product-type.application"') {
+        mainTargetUUID = uuid;
+        break;
+      }
+    }
+
+    // Find the group UUID whose path matches the app name
+    const groups = xcodeProject.hash.project.objects['PBXGroup'] || {};
+    let mainGroupUUID;
+    for (const uuid of Object.keys(groups)) {
+      if (uuid.endsWith('_comment')) continue;
+      const g = groups[uuid];
+      if (g.path === `"${appName}"` || g.path === appName) {
+        mainGroupUUID = uuid;
+        break;
+      }
+    }
+
+    if (mainTargetUUID && mainGroupUUID) {
+      xcodeProject.addSourceFile(`${appName}/WidgetBridge.swift`, { target: mainTargetUUID }, mainGroupUUID);
+      xcodeProject.addSourceFile(`${appName}/WidgetBridge.m`, { target: mainTargetUUID }, mainGroupUUID);
+    }
+
     return config;
   });
 
