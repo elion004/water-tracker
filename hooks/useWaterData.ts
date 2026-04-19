@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import {
   DayData,
   Settings,
@@ -60,6 +61,7 @@ export function useWaterData(): WaterDataHook {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [streak, setStreak] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const lastLoadedDate = useRef(getTodayString());
 
   const loadAll = useCallback(async () => {
     setIsLoading(true);
@@ -101,6 +103,7 @@ export function useWaterData(): WaterDataHook {
         goalMl: loadedSettings.goalMl,
         streak: computedStreak,
         lastUpdated: new Date().toISOString(),
+        date: today,
       });
     } finally {
       setIsLoading(false);
@@ -109,6 +112,17 @@ export function useWaterData(): WaterDataHook {
 
   useEffect(() => {
     loadAll();
+  }, [loadAll]);
+
+  // Reload whenever the app comes to foreground — picks up widget additions and day changes
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state === 'active') {
+        lastLoadedDate.current = getTodayString();
+        loadAll();
+      }
+    });
+    return () => subscription.remove();
   }, [loadAll]);
 
   const addWater = useCallback(
@@ -136,6 +150,7 @@ export function useWaterData(): WaterDataHook {
           goalMl: settings.goalMl,
           streak: computedStreak,
           lastUpdated: new Date().toISOString(),
+          date: getTodayString(),
         });
         return prev;
       });
@@ -153,6 +168,7 @@ export function useWaterData(): WaterDataHook {
           goalMl: updated.goalMl,
           streak,
           lastUpdated: new Date().toISOString(),
+          date: getTodayString(),
         });
         return updated;
       });
@@ -173,6 +189,7 @@ export function useWaterData(): WaterDataHook {
       goalMl: DEFAULT_SETTINGS.goalMl,
       streak: 0,
       lastUpdated: new Date().toISOString(),
+      date: getTodayString(),
     });
   }, []);
 

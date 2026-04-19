@@ -1,3 +1,12 @@
+// Links WidgetKit.framework to the main app target so WidgetCenter is available
+const withWidgetKitFramework = (config) => {
+  const { withXcodeProject } = require('@expo/config-plugins');
+  return withXcodeProject(config, (config) => {
+    config.modResults.addFramework('WidgetKit.framework');
+    return config;
+  });
+};
+
 module.exports = {
   expo: {
     name: 'WaterTrack',
@@ -50,6 +59,7 @@ module.exports = {
       ],
       'expo-notifications',
       '@bacons/apple-targets',
+      withWidgetKitFramework,
     ],
     experiments: {
       typedRoutes: true,

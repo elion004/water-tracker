@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { reloadWidgetTimelines } from '@/modules/WidgetReloader';
 
 const APP_GROUP = 'group.com.elionbajrami.watertracker';
 const WIDGET_KEY = 'waterWidgetData';
@@ -9,6 +10,7 @@ export interface WidgetData {
   goalMl: number;
   streak: number;
   lastUpdated: string; // ISO string
+  date: string; // 'YYYY-MM-DD' — used by the widget to detect day change
 }
 
 export interface PendingAddition {
@@ -23,6 +25,7 @@ export async function syncWidgetData(data: WidgetData): Promise<void> {
       await import('react-native-shared-group-preferences')
     ).default;
     await SharedGroupPreferences.setItem(WIDGET_KEY, JSON.stringify(data), APP_GROUP);
+    reloadWidgetTimelines();
   } catch {
     // widget sync is best-effort, never block the user
   }

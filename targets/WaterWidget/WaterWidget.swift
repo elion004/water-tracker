@@ -33,6 +33,12 @@ struct AddWaterIntent: AppIntent {
         if let json = defaults.string(forKey: widgetKey),
            let data = json.data(using: .utf8),
            var decoded = try? JSONDecoder().decode(WaterWidgetData.self, from: data) {
+            // Reset if it's a new day before adding
+            let today = todayDateString()
+            if decoded.date != today {
+                decoded.totalMl = 0
+                decoded.date = today
+            }
             decoded.totalMl += amountMl
             decoded.lastUpdated = ISO8601DateFormatter().string(from: Date())
             if let encoded = try? JSONEncoder().encode(decoded),
@@ -63,17 +69,24 @@ struct AddWaterIntent: AppIntent {
 
 // MARK: - Data Model
 
+private func todayDateString() -> String {
+    let fmt = DateFormatter()
+    fmt.dateFormat = "yyyy-MM-dd"
+    return fmt.string(from: Date())
+}
+
 struct WaterWidgetData: Codable {
     var totalMl: Int
     var goalMl: Int
     var streak: Int
     var lastUpdated: String
+    var date: String // 'YYYY-MM-DD'
 
     static var placeholder: WaterWidgetData {
-        WaterWidgetData(totalMl: 1400, goalMl: 2000, streak: 5, lastUpdated: "")
+        WaterWidgetData(totalMl: 1400, goalMl: 2000, streak: 5, lastUpdated: "", date: todayDateString())
     }
     static var empty: WaterWidgetData {
-        WaterWidgetData(totalMl: 0, goalMl: 2000, streak: 0, lastUpdated: "")
+        WaterWidgetData(totalMl: 0, goalMl: 2000, streak: 0, lastUpdated: "", date: todayDateString())
     }
 }
 
@@ -113,8 +126,20 @@ struct WaterProvider: TimelineProvider {
             let defaults = UserDefaults(suiteName: appGroup),
             let json = defaults.string(forKey: widgetKey),
             let data = json.data(using: .utf8),
-            let decoded = try? JSONDecoder().decode(WaterWidgetData.self, from: data)
+            var decoded = try? JSONDecoder().decode(WaterWidgetData.self, from: data)
         else { return .empty }
+
+        // New day: reset totalMl but keep goal and streak
+        let today = todayDateString()
+        if decoded.date != today {
+            decoded.totalMl = 0
+            decoded.date = today
+            decoded.lastUpdated = ISO8601DateFormatter().string(from: Date())
+            if let encoded = try? JSONEncoder().encode(decoded),
+               let str = String(data: encoded, encoding: .utf8) {
+                defaults.set(str, forKey: widgetKey)
+            }
+        }
         return decoded
     }
 
@@ -125,9 +150,16 @@ struct WaterProvider: TimelineProvider {
         completion(WaterEntry(date: Date(), data: context.isPreview ? .placeholder : loadData()))
     }
     func getTimeline(in context: Context, completion: @escaping (Timeline<WaterEntry>) -> Void) {
-        let entry = WaterEntry(date: Date(), data: loadData())
-        let next = Calendar.current.date(byAdding: .minute, value: 15, to: Date())!
-        completion(Timeline(entries: [entry], policy: .after(next)))
+        let now = Date()
+        let data = loadData()
+        let entry = WaterEntry(date: now, data: data)
+
+        let calendar = Calendar.current
+        let nextMidnight = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: now)!)
+        let nextFifteenMin = calendar.date(byAdding: .minute, value: 15, to: now)!
+        // Refresh at whichever comes first: next 15-min tick or midnight
+        let nextRefresh = nextFifteenMin < nextMidnight ? nextFifteenMin : nextMidnight
+        completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
     }
 }
 
@@ -249,7 +281,7 @@ struct MediumWidgetView: View {
     var body: some View {
         HStack(alignment: .center, spacing: 18) {
 
-                // Left: Ring
+                // Left: Ring — fixed size so it never gets squeezed
                 ZStack {
                     RingView(progress: data.progressFraction, lineWidth: 9, size: 88)
                     VStack(spacing: 2) {
@@ -261,6 +293,7 @@ struct MediumWidgetView: View {
                             .foregroundStyle(.white.opacity(0.65))
                     }
                 }
+                .fixedSize()
 
                 // Right: Stats + buttons
                 VStack(alignment: .leading, spacing: 10) {
@@ -323,11 +356,21 @@ struct MediumWidgetView: View {
                         }
                     }
 
-                    // Quick-add buttons
-                    HStack(spacing: 7) {
-                        AddButton(amountMl: 150)
-                        AddButton(amountMl: 250)
-                        AddButton(amountMl: 500)
+                    // Quick-add buttons — equal width so they always fit
+                    HStack(spacing: 6) {
+                        ForEach([150, 250, 500], id: \.self) { ml in
+                            Button(intent: AddWaterIntent(amountMl: ml)) {
+                                Text("+\(ml)")
+                                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                                    .foregroundStyle(brandGreenDark)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 7)
+                                    .background(.white)
+                                    .clipShape(Capsule())
+                                    .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity)
