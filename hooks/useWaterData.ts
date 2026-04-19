@@ -130,32 +130,26 @@ export function useWaterData(): WaterDataHook {
       const today = getTodayString();
       const updated = await addWaterEntry(today, amountMl);
 
-      setTodayData(updated);
-      setWeekData((prev) => {
-        const next = prev.map((d) => (d.date === today ? updated : d));
-        // If today wasn't in weekData yet, add it
-        if (!next.find((d) => d.date === today)) {
-          return [...next, updated];
-        }
-        return next;
-      });
+      const newWeekData = weekData.some((d) => d.date === today)
+        ? weekData.map((d) => (d.date === today ? updated : d))
+        : [...weekData, updated];
 
-      // Recompute streak
-      setWeekData((prev) => {
-        const computedStreak = computeStreak(prev, settings.goalMl);
-        setStreak(computedStreak);
-        saveStreak(computedStreak);
-        syncWidgetData({
-          totalMl: updated.totalMl,
-          goalMl: settings.goalMl,
-          streak: computedStreak,
-          lastUpdated: new Date().toISOString(),
-          date: getTodayString(),
-        });
-        return prev;
+      const computedStreak = computeStreak(newWeekData, settings.goalMl);
+
+      setTodayData(updated);
+      setWeekData(newWeekData);
+      setStreak(computedStreak);
+      saveStreak(computedStreak);
+
+      await syncWidgetData({
+        totalMl: updated.totalMl,
+        goalMl: settings.goalMl,
+        streak: computedStreak,
+        lastUpdated: new Date().toISOString(),
+        date: today,
       });
     },
-    [settings.goalMl]
+    [settings.goalMl, weekData]
   );
 
   const updateSettings = useCallback(

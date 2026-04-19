@@ -6,6 +6,7 @@ public class WidgetReloaderModule: Module {
     Name("WidgetReloader")
 
     Function("reloadAll") {
+      UserDefaults(suiteName: "group.com.elionbajrami.watertracker")?.synchronize()
       WidgetCenter.shared.reloadAllTimelines()
     }
   }
