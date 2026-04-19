@@ -1,9 +1,9 @@
-import { Platform } from 'react-native';
-import { reloadWidgetTimelines } from '@/modules/WidgetReloader';
+import { Platform, NativeModules } from 'react-native';
 
 const APP_GROUP = 'group.com.elionbajrami.watertracker';
-const WIDGET_KEY = 'waterWidgetData';
 const PENDING_KEY = 'waterWidgetPending';
+
+const { WaterTrackerWidgetBridge } = NativeModules;
 
 export interface WidgetData {
   totalMl: number;
@@ -18,16 +18,13 @@ export interface PendingAddition {
   timestamp: string; // ISO string
 }
 
-export async function syncWidgetData(data: WidgetData): Promise<void> {
+// Writes data to App Group UserDefaults AND triggers immediate widget reload
+export function syncWidgetData(data: WidgetData): void {
   if (Platform.OS !== 'ios') return;
   try {
-    const SharedGroupPreferences = (
-      await import('react-native-shared-group-preferences')
-    ).default;
-    await SharedGroupPreferences.setItem(WIDGET_KEY, JSON.stringify(data), APP_GROUP);
-    reloadWidgetTimelines();
+    WaterTrackerWidgetBridge?.updateWidget(JSON.stringify(data));
   } catch {
-    // widget sync is best-effort, never block the user
+    // best-effort
   }
 }
 

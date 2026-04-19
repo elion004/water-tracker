@@ -1,10 +1,69 @@
-// Links WidgetKit.framework to the main app target so WidgetCenter is available
 const withWidgetKitFramework = (config) => {
   const { withXcodeProject } = require('@expo/config-plugins');
   return withXcodeProject(config, (config) => {
     config.modResults.addFramework('WidgetKit.framework');
     return config;
   });
+};
+
+const withWidgetBridge = (config) => {
+  const { withDangerousMod, withXcodeProject } = require('@expo/config-plugins');
+  const path = require('path');
+  const fs = require('fs');
+
+  const SWIFT = `import Foundation
+import WidgetKit
+
+@objc(WaterTrackerWidgetBridge)
+class WaterTrackerWidgetBridge: NSObject {
+  private let appGroup = "group.com.elionbajrami.watertracker"
+  private let widgetKey = "waterWidgetData"
+
+  @objc
+  func updateWidget(_ jsonData: String) {
+    let defaults = UserDefaults(suiteName: appGroup)
+    defaults?.set(jsonData, forKey: widgetKey)
+    defaults?.synchronize()
+    if #available(iOS 14.0, *) {
+      WidgetCenter.shared.reloadAllTimelines()
+    }
+  }
+
+  @objc
+  static func requiresMainQueueSetup() -> Bool { return false }
+}
+`;
+
+  const OBJC = `#import <React/RCTBridgeModule.h>
+
+@interface RCT_EXTERN_MODULE(WaterTrackerWidgetBridge, NSObject)
+RCT_EXTERN_METHOD(updateWidget:(NSString *)jsonData)
+@end
+`;
+
+  // Step 1: Write the files into the iOS project directory
+  config = withDangerousMod(config, [
+    'ios',
+    (config) => {
+      const iosDir = config.modRequest.platformProjectRoot;
+      const appName = config.modRequest.projectName;
+      const dir = path.join(iosDir, appName);
+      fs.writeFileSync(path.join(dir, 'WidgetBridge.swift'), SWIFT);
+      fs.writeFileSync(path.join(dir, 'WidgetBridge.m'), OBJC);
+      return config;
+    },
+  ]);
+
+  // Step 2: Add both files to the Xcode project main target
+  config = withXcodeProject(config, (config) => {
+    const xcodeProject = config.modResults;
+    const appName = config.modRequest.projectName;
+    xcodeProject.addSourceFile(`${appName}/WidgetBridge.swift`, {}, appName);
+    xcodeProject.addSourceFile(`${appName}/WidgetBridge.m`, {}, appName);
+    return config;
+  });
+
+  return config;
 };
 
 module.exports = {
@@ -60,6 +119,7 @@ module.exports = {
       'expo-notifications',
       '@bacons/apple-targets',
       withWidgetKitFramework,
+      withWidgetBridge,
     ],
     experiments: {
       typedRoutes: true,

@@ -141,7 +141,7 @@ export function useWaterData(): WaterDataHook {
       setStreak(computedStreak);
       saveStreak(computedStreak);
 
-      await syncWidgetData({
+      syncWidgetData({
         totalMl: updated.totalMl,
         goalMl: settings.goalMl,
         streak: computedStreak,
