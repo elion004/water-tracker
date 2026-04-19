@@ -6,7 +6,7 @@ Pod::Spec.new do |s|
   s.license        = { :type => "MIT" }
   s.authors        = { "WaterTrack" => "elion004@icloud.com" }
   s.source         = { :git => "https://github.com/elion004/water-tracker.git", :tag => s.version.to_s }
-  s.platform       = :ios, "17.0"
+  s.platform       = :ios, "15.1"
   s.swift_version  = "5.9"
   s.source_files   = "ios/**/*.swift"
   s.dependency     "ExpoModulesCore"
