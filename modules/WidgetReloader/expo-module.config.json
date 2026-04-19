@@ -1,6 +1,7 @@
 {
   "platforms": ["ios"],
   "ios": {
-    "modules": ["WidgetReloaderModule"]
+    "modules": ["WidgetReloaderModule"],
+    "appDelegateSubscribers": ["WidgetAutoReloadSubscriber"]
   }
 }
