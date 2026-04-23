@@ -1,6 +1,7 @@
 import { Platform, NativeModules } from 'react-native';
 
 const APP_GROUP = 'group.com.elionbajrami.watertracker';
+const WIDGET_KEY = 'waterWidgetData';
 const PENDING_KEY = 'waterWidgetPending';
 
 const { WaterTrackerWidgetBridge } = NativeModules;
@@ -10,7 +11,7 @@ export interface WidgetData {
   goalMl: number;
   streak: number;
   lastUpdated: string; // ISO string
-  date: string; // 'YYYY-MM-DD' — used by the widget to detect day change
+  date: string; // 'YYYY-MM-DD'
 }
 
 export interface PendingAddition {
@@ -18,11 +19,21 @@ export interface PendingAddition {
   timestamp: string; // ISO string
 }
 
-// Writes data to App Group UserDefaults AND triggers immediate widget reload
-export function syncWidgetData(data: WidgetData): void {
+export async function syncWidgetData(data: WidgetData): Promise<void> {
   if (Platform.OS !== 'ios') return;
+  const json = JSON.stringify(data);
   try {
-    WaterTrackerWidgetBridge?.updateWidget(JSON.stringify(data));
+    // Always write via SharedGroupPreferences — proven reliable
+    const SharedGroupPreferences = (
+      await import('react-native-shared-group-preferences')
+    ).default;
+    await SharedGroupPreferences.setItem(WIDGET_KEY, json, APP_GROUP);
+  } catch {
+    // best-effort
+  }
+  try {
+    // Trigger immediate widget reload via native bridge (if available)
+    WaterTrackerWidgetBridge?.updateWidget(json);
   } catch {
     // best-effort
   }
