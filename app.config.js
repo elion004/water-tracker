@@ -70,21 +70,9 @@ RCT_EXTERN_METHOD(updateWidget:(NSString *)jsonData)
       }
     }
 
-    // Find the group UUID whose path matches the app name
-    const groups = xcodeProject.hash.project.objects['PBXGroup'] || {};
-    let mainGroupUUID;
-    for (const uuid of Object.keys(groups)) {
-      if (uuid.endsWith('_comment')) continue;
-      const g = groups[uuid];
-      if (g.path === `"${appName}"` || g.path === appName) {
-        mainGroupUUID = uuid;
-        break;
-      }
-    }
-
-    if (mainTargetUUID && mainGroupUUID) {
-      xcodeProject.addSourceFile(`${appName}/WidgetBridge.swift`, { target: mainTargetUUID }, mainGroupUUID);
-      xcodeProject.addSourceFile(`${appName}/WidgetBridge.m`, { target: mainTargetUUID }, mainGroupUUID);
+    if (mainTargetUUID) {
+      xcodeProject.addSourceFile(`${appName}/WidgetBridge.swift`, { target: mainTargetUUID });
+      xcodeProject.addSourceFile(`${appName}/WidgetBridge.m`, { target: mainTargetUUID });
     }
 
     return config;
