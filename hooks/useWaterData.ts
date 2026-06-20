@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import {
   DayData,
   Settings,
   loadDayData,
-  saveDayData,
   addWaterEntry,
   loadSettings,
   saveSettings,
@@ -14,7 +14,8 @@ import {
   EMPTY_DAY,
 } from '@/utils/storage';
 import { getTodayString, getLastNDays, getDateString } from '@/utils/dateHelpers';
-import { subDays } from 'date-fns';
+import { subDays, parseISO, format } from 'date-fns';
+import { syncWidgetData, loadWidgetPending, clearWidgetPending } from '@/utils/widgetData';
 
 export interface WaterDataHook {
   todayData: DayData;
@@ -63,6 +64,16 @@ export function useWaterData(): WaterDataHook {
   const loadAll = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Process any water additions made via the widget while the app was closed
+      const pending = await loadWidgetPending();
+      if (pending.length > 0) {
+        for (const entry of pending) {
+          const date = format(parseISO(entry.timestamp), 'yyyy-MM-dd');
+          await addWaterEntry(date, entry.amountMl);
+        }
+        await clearWidgetPending();
+      }
+
       const [loadedSettings, loadedStreak] = await Promise.all([
         loadSettings(),
         loadStreak(),
@@ -84,6 +95,14 @@ export function useWaterData(): WaterDataHook {
       if (computedStreak !== loadedStreak) {
         await saveStreak(computedStreak);
       }
+
+      syncWidgetData({
+        totalMl: todayLoaded.totalMl,
+        goalMl: loadedSettings.goalMl,
+        streak: computedStreak,
+        lastUpdated: new Date().toISOString(),
+        date: today,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -93,39 +112,60 @@ export function useWaterData(): WaterDataHook {
     loadAll();
   }, [loadAll]);
 
+  // Reload whenever the app comes to foreground — picks up widget additions and day changes
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state === 'active') {
+        loadAll();
+      }
+    });
+    return () => subscription.remove();
+  }, [loadAll]);
+
   const addWater = useCallback(
     async (amountMl: number) => {
       const today = getTodayString();
       const updated = await addWaterEntry(today, amountMl);
 
-      setTodayData(updated);
-      setWeekData((prev) => {
-        const next = prev.map((d) => (d.date === today ? updated : d));
-        // If today wasn't in weekData yet, add it
-        if (!next.find((d) => d.date === today)) {
-          return [...next, updated];
-        }
-        return next;
-      });
+      const newWeekData = weekData.some((d) => d.date === today)
+        ? weekData.map((d) => (d.date === today ? updated : d))
+        : [...weekData, updated];
 
-      // Recompute streak
-      setWeekData((prev) => {
-        const computedStreak = computeStreak(prev, settings.goalMl);
-        setStreak(computedStreak);
-        saveStreak(computedStreak);
-        return prev;
+      const computedStreak = computeStreak(newWeekData, settings.goalMl);
+
+      setTodayData(updated);
+      setWeekData(newWeekData);
+      setStreak(computedStreak);
+      saveStreak(computedStreak);
+
+      syncWidgetData({
+        totalMl: updated.totalMl,
+        goalMl: settings.goalMl,
+        streak: computedStreak,
+        lastUpdated: new Date().toISOString(),
+        date: today,
       });
     },
-    [settings.goalMl]
+    [settings.goalMl, weekData]
   );
 
-  const updateSettings = useCallback(async (newSettings: Partial<Settings>) => {
-    setSettings((prev) => {
-      const updated = { ...prev, ...newSettings };
-      saveSettings(updated);
-      return updated;
-    });
-  }, []);
+  const updateSettings = useCallback(
+    async (newSettings: Partial<Settings>) => {
+      setSettings((prev) => {
+        const updated = { ...prev, ...newSettings };
+        saveSettings(updated);
+        syncWidgetData({
+          totalMl: todayData.totalMl,
+          goalMl: updated.goalMl,
+          streak,
+          lastUpdated: new Date().toISOString(),
+          date: getTodayString(),
+        });
+        return updated;
+      });
+    },
+    [todayData.totalMl, streak]
+  );
 
   const resetAllData = useCallback(async () => {
     await storageResetAll();
@@ -135,6 +175,13 @@ export function useWaterData(): WaterDataHook {
     setWeekData(getLastNDays(7).map((d) => EMPTY_DAY(d)));
     setSettings(DEFAULT_SETTINGS);
     setStreak(0);
+    syncWidgetData({
+      totalMl: 0,
+      goalMl: DEFAULT_SETTINGS.goalMl,
+      streak: 0,
+      lastUpdated: new Date().toISOString(),
+      date: getTodayString(),
+    });
   }, []);
 
   return {
