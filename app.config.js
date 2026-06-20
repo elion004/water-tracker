@@ -70,22 +70,12 @@ RCT_EXTERN_METHOD(updateWidget:(NSString *)jsonData)
       }
     }
 
-    // Find the main app group UUID (addSourceFile without group calls addPluginFile → crashes)
-    const allGroups = xcodeProject.hash.project.objects['PBXGroup'];
-    let mainGroupKey;
-    for (const key of Object.keys(allGroups)) {
-      if (key.endsWith('_comment')) continue;
-      const grp = allGroups[key];
-      if (grp.name === appName || grp.name === `"${appName}"`) {
-        mainGroupKey = key;
-        break;
-      }
-    }
+    if (!mainTargetUUID) return config;
 
-    if (mainTargetUUID && mainGroupKey) {
-      xcodeProject.addSourceFile('WidgetBridge.swift', { target: mainTargetUUID }, mainGroupKey);
-      xcodeProject.addSourceFile('WidgetBridge.m', { target: mainTargetUUID }, mainGroupKey);
-    }
+    // Root group UUID → path `${appName}/WidgetBridge.swift` resolves to ios/WaterTrack/WidgetBridge.swift
+    const mainGroupUUID = xcodeProject.getFirstProject().firstProject.mainGroup;
+    xcodeProject.addSourceFile(`${appName}/WidgetBridge.swift`, { target: mainTargetUUID }, mainGroupUUID);
+    xcodeProject.addSourceFile(`${appName}/WidgetBridge.m`, { target: mainTargetUUID }, mainGroupUUID);
 
     return config;
   });
