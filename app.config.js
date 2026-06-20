@@ -70,9 +70,21 @@ RCT_EXTERN_METHOD(updateWidget:(NSString *)jsonData)
       }
     }
 
-    if (mainTargetUUID) {
-      xcodeProject.addSourceFile(`${appName}/WidgetBridge.swift`, { target: mainTargetUUID });
-      xcodeProject.addSourceFile(`${appName}/WidgetBridge.m`, { target: mainTargetUUID });
+    // Find the main app group UUID (addSourceFile without group calls addPluginFile → crashes)
+    const allGroups = xcodeProject.hash.project.objects['PBXGroup'];
+    let mainGroupKey;
+    for (const key of Object.keys(allGroups)) {
+      if (key.endsWith('_comment')) continue;
+      const grp = allGroups[key];
+      if (grp.name === appName || grp.name === `"${appName}"`) {
+        mainGroupKey = key;
+        break;
+      }
+    }
+
+    if (mainTargetUUID && mainGroupKey) {
+      xcodeProject.addSourceFile('WidgetBridge.swift', { target: mainTargetUUID }, mainGroupKey);
+      xcodeProject.addSourceFile('WidgetBridge.m', { target: mainTargetUUID }, mainGroupKey);
     }
 
     return config;
