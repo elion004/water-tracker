@@ -33,7 +33,6 @@ struct AddWaterIntent: AppIntent {
         if let json = defaults.string(forKey: widgetKey),
            let data = json.data(using: .utf8),
            var decoded = try? JSONDecoder().decode(WaterWidgetData.self, from: data) {
-            // Reset if it's a new day before adding
             let today = todayDateString()
             if decoded.date != today {
                 decoded.totalMl = 0
@@ -80,7 +79,7 @@ struct WaterWidgetData: Codable {
     var goalMl: Int
     var streak: Int
     var lastUpdated: String
-    var date: String // 'YYYY-MM-DD'
+    var date: String
 
     static var placeholder: WaterWidgetData {
         WaterWidgetData(totalMl: 1400, goalMl: 2000, streak: 5, lastUpdated: "", date: todayDateString())
@@ -129,7 +128,6 @@ struct WaterProvider: TimelineProvider {
             var decoded = try? JSONDecoder().decode(WaterWidgetData.self, from: data)
         else { return .empty }
 
-        // New day: reset totalMl but keep goal and streak
         let today = todayDateString()
         if decoded.date != today {
             decoded.totalMl = 0
@@ -157,7 +155,6 @@ struct WaterProvider: TimelineProvider {
         let calendar = Calendar.current
         let nextMidnight = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: now)!)
         let nextFifteenMin = calendar.date(byAdding: .minute, value: 15, to: now)!
-        // Refresh at whichever comes first: next 15-min tick or midnight
         let nextRefresh = nextFifteenMin < nextMidnight ? nextFifteenMin : nextMidnight
         completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
     }
@@ -174,21 +171,59 @@ private let brandGreen      = Color(red: 0.114, green: 0.620, blue: 0.459)
 private let brandGreenDark  = Color(red: 0.059, green: 0.431, blue: 0.337)
 private let brandGreenDeep  = Color(red: 0.039, green: 0.310, blue: 0.235)
 
+// MARK: - Widget Theme
+// Adapts colors based on the widget rendering mode so text stays readable
+// when the user applies a custom tint color (iOS 18+).
+
+struct WidgetTheme {
+    let text: Color
+    let textDim: Color
+    let ringTrack: Color
+    let fill: Color
+    let progressTrack: Color
+    let buttonBg: Color
+    let buttonLabel: Color
+
+    // Used when the widget renders in its own full colors (default home screen).
+    static let fullColor = WidgetTheme(
+        text: .white,
+        textDim: .white.opacity(0.7),
+        ringTrack: .white.opacity(0.15),
+        fill: .white,
+        progressTrack: .white.opacity(0.18),
+        buttonBg: .white,
+        buttonLabel: brandGreenDark
+    )
+
+    // Used when iOS applies a tint (accented/vibrant rendering).
+    // .primary/.secondary automatically adapt to light or dark tint backgrounds.
+    static let tinted = WidgetTheme(
+        text: .primary,
+        textDim: .secondary,
+        ringTrack: Color.primary.opacity(0.2),
+        fill: .primary,
+        progressTrack: Color.primary.opacity(0.2),
+        buttonBg: Color.primary.opacity(0.15),
+        buttonLabel: .primary
+    )
+}
+
 // MARK: - Shared Components
 
 struct RingView: View {
     let progress: Double
     let lineWidth: CGFloat
     let size: CGFloat
+    let theme: WidgetTheme
 
     var body: some View {
         ZStack {
             Circle()
-                .stroke(Color.white.opacity(0.15), lineWidth: lineWidth)
+                .stroke(theme.ringTrack, lineWidth: lineWidth)
             Circle()
                 .trim(from: 0, to: progress)
                 .stroke(
-                    Color.white,
+                    theme.fill,
                     style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
@@ -199,6 +234,7 @@ struct RingView: View {
 
 struct AddButton: View {
     let amountMl: Int
+    let theme: WidgetTheme
 
     private var label: String {
         amountMl >= 1000
@@ -214,12 +250,11 @@ struct AddButton: View {
                 Text(label)
                     .font(.system(size: 12, weight: .bold, design: .rounded))
             }
-            .foregroundStyle(brandGreenDark)
+            .foregroundStyle(theme.buttonLabel)
             .padding(.horizontal, 11)
             .padding(.vertical, 7)
-            .background(.white)
+            .background(theme.buttonBg)
             .clipShape(Capsule())
-            .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
         }
         .buttonStyle(.plain)
     }
@@ -229,47 +264,45 @@ struct AddButton: View {
 
 struct SmallWidgetView: View {
     let data: WaterWidgetData
+    let theme: WidgetTheme
 
     var body: some View {
         VStack(spacing: 0) {
-                Spacer()
+            Spacer()
 
-                // Ring + amount
-                ZStack {
-                    RingView(progress: data.progressFraction, lineWidth: 7, size: 78)
-                    VStack(spacing: 1) {
-                        Text(data.totalFormatted)
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                        Text("\(Int(data.progressFraction * 100))%")
-                            .font(.system(size: 10, weight: .semibold, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.7))
-                    }
+            ZStack {
+                RingView(progress: data.progressFraction, lineWidth: 7, size: 78, theme: theme)
+                VStack(spacing: 1) {
+                    Text(data.totalFormatted)
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundStyle(theme.text)
+                    Text("\(Int(data.progressFraction * 100))%")
+                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                        .foregroundStyle(theme.textDim)
                 }
-
-                Spacer().frame(height: 8)
-
-                // Status
-                Group {
-                    if data.isGoalReached {
-                        Label("Ziel erreicht!", systemImage: "checkmark.seal.fill")
-                            .font(.system(size: 10, weight: .semibold, design: .rounded))
-                            .foregroundStyle(.white)
-                    } else {
-                        Text("\(data.remainingFormatted) fehlen")
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.8))
-                    }
-                }
-
-                Spacer().frame(height: 10)
-
-                // Quick-add button
-                AddButton(amountMl: 250)
-
-                Spacer()
             }
-            .padding(.horizontal, 12)
+
+            Spacer().frame(height: 8)
+
+            Group {
+                if data.isGoalReached {
+                    Label("Ziel erreicht!", systemImage: "checkmark.seal.fill")
+                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                        .foregroundStyle(theme.text)
+                } else {
+                    Text("\(data.remainingFormatted) fehlen")
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundStyle(theme.textDim)
+                }
+            }
+
+            Spacer().frame(height: 10)
+
+            AddButton(amountMl: 250, theme: theme)
+
+            Spacer()
+        }
+        .padding(.horizontal, 12)
     }
 }
 
@@ -277,106 +310,101 @@ struct SmallWidgetView: View {
 
 struct MediumWidgetView: View {
     let data: WaterWidgetData
+    let theme: WidgetTheme
 
     var body: some View {
         HStack(alignment: .center, spacing: 18) {
 
-                // Left: Ring — fixed size so it never gets squeezed
-                ZStack {
-                    RingView(progress: data.progressFraction, lineWidth: 9, size: 88)
-                    VStack(spacing: 2) {
-                        Text(data.totalFormatted)
-                            .font(.system(size: 17, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                        Text("von \(data.goalFormatted)")
-                            .font(.system(size: 9, weight: .regular, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.65))
-                    }
+            ZStack {
+                RingView(progress: data.progressFraction, lineWidth: 9, size: 88, theme: theme)
+                VStack(spacing: 2) {
+                    Text(data.totalFormatted)
+                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .foregroundStyle(theme.text)
+                    Text("von \(data.goalFormatted)")
+                        .font(.system(size: 9, weight: .regular, design: .rounded))
+                        .foregroundStyle(theme.textDim)
                 }
-                .fixedSize()
-
-                // Right: Stats + buttons
-                VStack(alignment: .leading, spacing: 10) {
-
-                    // Progress row
-                    VStack(alignment: .leading, spacing: 5) {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text("Tagesziel")
-                                .font(.system(size: 11, weight: .medium, design: .rounded))
-                                .foregroundStyle(.white.opacity(0.75))
-                            Spacer()
-                            Text("\(Int(data.progressFraction * 100))%")
-                                .font(.system(size: 13, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white)
-                        }
-                        GeometryReader { geo in
-                            ZStack(alignment: .leading) {
-                                Capsule()
-                                    .fill(.white.opacity(0.18))
-                                    .frame(height: 5)
-                                Capsule()
-                                    .fill(.white)
-                                    .frame(width: geo.size.width * data.progressFraction, height: 5)
-                            }
-                        }
-                        .frame(height: 5)
-                    }
-
-                    // Status + streak
-                    HStack {
-                        if data.isGoalReached {
-                            Label("Ziel erreicht!", systemImage: "checkmark.seal.fill")
-                                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                                .foregroundStyle(.white)
-                        } else {
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text("Noch")
-                                    .font(.system(size: 9, design: .rounded))
-                                    .foregroundStyle(.white.opacity(0.65))
-                                Text(data.remainingFormatted)
-                                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                                    .foregroundStyle(.white)
-                            }
-                        }
-                        Spacer()
-                        if data.streak > 0 {
-                            HStack(spacing: 3) {
-                                Image(systemName: "flame.fill")
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(.orange)
-                                VStack(alignment: .leading, spacing: 0) {
-                                    Text("\(data.streak)")
-                                        .font(.system(size: 13, weight: .bold, design: .rounded))
-                                        .foregroundStyle(.white)
-                                    Text("Tage")
-                                        .font(.system(size: 8, design: .rounded))
-                                        .foregroundStyle(.white.opacity(0.65))
-                                }
-                            }
-                        }
-                    }
-
-                    // Quick-add buttons — equal width so they always fit
-                    HStack(spacing: 6) {
-                        ForEach([150, 250, 500], id: \.self) { ml in
-                            Button(intent: AddWaterIntent(amountMl: ml)) {
-                                Text("+\(ml)")
-                                    .font(.system(size: 12, weight: .bold, design: .rounded))
-                                    .foregroundStyle(brandGreenDark)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 7)
-                                    .background(.white)
-                                    .clipShape(Capsule())
-                                    .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+            .fixedSize()
+
+            VStack(alignment: .leading, spacing: 10) {
+
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Tagesziel")
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .foregroundStyle(theme.textDim)
+                        Spacer()
+                        Text("\(Int(data.progressFraction * 100))%")
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundStyle(theme.text)
+                    }
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule()
+                                .fill(theme.progressTrack)
+                                .frame(height: 5)
+                            Capsule()
+                                .fill(theme.fill)
+                                .frame(width: geo.size.width * data.progressFraction, height: 5)
+                        }
+                    }
+                    .frame(height: 5)
+                }
+
+                HStack {
+                    if data.isGoalReached {
+                        Label("Ziel erreicht!", systemImage: "checkmark.seal.fill")
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .foregroundStyle(theme.text)
+                    } else {
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Noch")
+                                .font(.system(size: 9, design: .rounded))
+                                .foregroundStyle(theme.textDim)
+                            Text(data.remainingFormatted)
+                                .font(.system(size: 14, weight: .bold, design: .rounded))
+                                .foregroundStyle(theme.text)
+                        }
+                    }
+                    Spacer()
+                    if data.streak > 0 {
+                        HStack(spacing: 3) {
+                            Image(systemName: "flame.fill")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.orange)
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text("\(data.streak)")
+                                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                                    .foregroundStyle(theme.text)
+                                Text("Tage")
+                                    .font(.system(size: 8, design: .rounded))
+                                    .foregroundStyle(theme.textDim)
+                            }
+                        }
+                    }
+                }
+
+                HStack(spacing: 6) {
+                    ForEach([150, 250, 500], id: \.self) { ml in
+                        Button(intent: AddWaterIntent(amountMl: ml)) {
+                            Text("+\(ml)")
+                                .font(.system(size: 12, weight: .bold, design: .rounded))
+                                .foregroundStyle(theme.buttonLabel)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 7)
+                                .background(theme.buttonBg)
+                                .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
     }
 }
 
@@ -385,12 +413,17 @@ struct MediumWidgetView: View {
 struct WaterWidgetEntryView: View {
     var entry: WaterEntry
     @Environment(\.widgetFamily) var family
+    @Environment(\.widgetRenderingMode) var renderingMode
+
+    var theme: WidgetTheme {
+        renderingMode == .fullColor ? .fullColor : .tinted
+    }
 
     var body: some View {
         switch family {
-        case .systemSmall:  SmallWidgetView(data: entry.data)
-        case .systemMedium: MediumWidgetView(data: entry.data)
-        default:            SmallWidgetView(data: entry.data)
+        case .systemSmall:  SmallWidgetView(data: entry.data, theme: theme)
+        case .systemMedium: MediumWidgetView(data: entry.data, theme: theme)
+        default:            SmallWidgetView(data: entry.data, theme: theme)
         }
     }
 }

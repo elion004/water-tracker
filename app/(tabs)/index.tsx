@@ -19,6 +19,7 @@ import { ProgressRing } from '@/components/ProgressRing';
 import { QuickAddButton } from '@/components/QuickAddButton';
 import { StreakCard } from '@/components/StreakCard';
 import { colors, typography, spacing, borderRadius } from '@/constants/theme';
+import * as Haptics from 'expo-haptics';
 import { formatDisplayDate, getGreeting, getTodayString } from '@/utils/dateHelpers';
 
 export default function HomeScreen() {
@@ -79,6 +80,7 @@ export default function HomeScreen() {
       Alert.alert('Ungültige Menge', 'Bitte gib eine Menge zwischen 1 und 5000 ml ein.');
       return;
     }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setCustomModalVisible(false);
     setCustomAmount('');
     handleAdd(ml);
