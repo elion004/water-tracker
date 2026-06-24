@@ -25,7 +25,7 @@ import { formatDisplayDate, getGreeting, getTodayString } from '@/utils/dateHelp
 export default function HomeScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
-  const { todayData, settings, streak, addWater, reload, isLoading } = useWaterData();
+  const { todayData, settings, streak, addWater, removeWater, reload, isLoading } = useWaterData();
 
   useFocusEffect(
     useCallback(() => {
@@ -40,10 +40,18 @@ export default function HomeScreen() {
   const toastTranslateY = useRef(new Animated.Value(20)).current;
   const [toastText, setToastText] = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastEntryRef = useRef<{ id: string; date: string } | null>(null);
 
   const bgColor = isDark ? colors.dark.background : colors.background;
   const textPrimary = isDark ? colors.dark.textPrimary : colors.textPrimary;
   const textSecondary = isDark ? colors.dark.textSecondary : colors.textSecondary;
+
+  const hideToast = useCallback(() => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true }).start(
+      () => { toastTranslateY.setValue(20); }
+    );
+  }, [toastOpacity, toastTranslateY]);
 
   const showToast = useCallback(
     (text: string) => {
@@ -56,19 +64,25 @@ export default function HomeScreen() {
       ]).start();
 
       toastTimer.current = setTimeout(() => {
-        Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true }).start(
-          () => {
-            toastTranslateY.setValue(20);
-          }
-        );
-      }, 1800);
+        hideToast();
+        lastEntryRef.current = null;
+      }, 2500);
     },
-    [toastOpacity, toastTranslateY]
+    [toastOpacity, toastTranslateY, hideToast]
   );
+
+  const handleUndo = useCallback(async () => {
+    const last = lastEntryRef.current;
+    if (!last) return;
+    lastEntryRef.current = null;
+    hideToast();
+    await removeWater(last.date, last.id);
+  }, [hideToast, removeWater]);
 
   const handleAdd = useCallback(
     async (ml: number) => {
-      await addWater(ml);
+      const entry = await addWater(ml);
+      lastEntryRef.current = { id: entry.id, date: getTodayString() };
       showToast(`+${ml}ml hinzugefügt!`);
     },
     [addWater, showToast]
@@ -166,13 +180,15 @@ export default function HomeScreen() {
           {
             opacity: toastOpacity,
             transform: [{ translateY: toastTranslateY }],
-            pointerEvents: 'none',
           },
         ]}
       >
         <Text style={[typography.body, { color: colors.primaryBg, fontWeight: '500' }]}>
           {toastText}
         </Text>
+        <Pressable onPress={handleUndo} hitSlop={8}>
+          <Text style={styles.undoText}>Rückgängig</Text>
+        </Pressable>
       </Animated.View>
 
       {/* Custom Amount Modal */}
@@ -285,6 +301,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.pill,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  undoText: {
+    color: colors.white,
+    fontWeight: '700',
+    fontSize: 13,
   },
   modalOverlay: {
     flex: 1,

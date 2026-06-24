@@ -66,7 +66,10 @@ export async function saveDayData(data: DayData): Promise<void> {
   }
 }
 
-export async function addWaterEntry(date: string, amountMl: number): Promise<DayData> {
+export async function addWaterEntry(
+  date: string,
+  amountMl: number
+): Promise<{ updated: DayData; entry: WaterEntry }> {
   const day = await loadDayData(date);
   const entry: WaterEntry = {
     id: generateId(),
@@ -77,6 +80,19 @@ export async function addWaterEntry(date: string, amountMl: number): Promise<Day
     ...day,
     totalMl: day.totalMl + amountMl,
     entries: [...day.entries, entry],
+  };
+  await saveDayData(updated);
+  return { updated, entry };
+}
+
+export async function removeWaterEntry(date: string, entryId: string): Promise<DayData> {
+  const day = await loadDayData(date);
+  const entry = day.entries.find((e) => e.id === entryId);
+  if (!entry) return day;
+  const updated: DayData = {
+    ...day,
+    totalMl: Math.max(day.totalMl - entry.amountMl, 0),
+    entries: day.entries.filter((e) => e.id !== entryId),
   };
   await saveDayData(updated);
   return updated;
