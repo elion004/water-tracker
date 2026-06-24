@@ -6,6 +6,7 @@ import {
   StyleSheet,
   useColorScheme,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { colors, borderRadius, typography } from '@/constants/theme';
 
 interface QuickAddButtonProps {
@@ -41,7 +42,10 @@ export function QuickAddButton({ label, onPress, accessibilityLabel }: QuickAddB
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }], flex: 1 }}>
       <Pressable
-        onPress={onPress}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          onPress();
+        }}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         accessibilityLabel={accessibilityLabel ?? label}
