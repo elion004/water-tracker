@@ -2,9 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import {
   DayData,
+  WaterEntry,
   Settings,
   loadDayData,
   addWaterEntry,
+  removeWaterEntry,
   loadSettings,
   saveSettings,
   loadStreak,
@@ -22,7 +24,8 @@ export interface WaterDataHook {
   weekData: DayData[];
   settings: Settings;
   streak: number;
-  addWater: (amountMl: number) => Promise<void>;
+  addWater: (amountMl: number) => Promise<WaterEntry>;
+  removeWater: (date: string, entryId: string) => Promise<void>;
   updateSettings: (newSettings: Partial<Settings>) => Promise<void>;
   resetAllData: () => Promise<void>;
   reload: () => Promise<void>;
@@ -69,7 +72,7 @@ export function useWaterData(): WaterDataHook {
       if (pending.length > 0) {
         for (const entry of pending) {
           const date = format(parseISO(entry.timestamp), 'yyyy-MM-dd');
-          await addWaterEntry(date, entry.amountMl);
+          await addWaterEntry(date, entry.amountMl); // return value intentionally ignored
         }
         await clearWidgetPending();
       }
@@ -123,9 +126,9 @@ export function useWaterData(): WaterDataHook {
   }, [loadAll]);
 
   const addWater = useCallback(
-    async (amountMl: number) => {
+    async (amountMl: number): Promise<WaterEntry> => {
       const today = getTodayString();
-      const updated = await addWaterEntry(today, amountMl);
+      const { updated, entry } = await addWaterEntry(today, amountMl);
 
       const newWeekData = weekData.some((d) => d.date === today)
         ? weekData.map((d) => (d.date === today ? updated : d))
@@ -144,6 +147,34 @@ export function useWaterData(): WaterDataHook {
         streak: computedStreak,
         lastUpdated: new Date().toISOString(),
         date: today,
+      });
+
+      return entry;
+    },
+    [settings.goalMl, weekData]
+  );
+
+  const removeWater = useCallback(
+    async (date: string, entryId: string) => {
+      const updated = await removeWaterEntry(date, entryId);
+
+      const newWeekData = weekData.some((d) => d.date === date)
+        ? weekData.map((d) => (d.date === date ? updated : d))
+        : weekData;
+
+      const computedStreak = computeStreak(newWeekData, settings.goalMl);
+
+      if (date === getTodayString()) setTodayData(updated);
+      setWeekData(newWeekData);
+      setStreak(computedStreak);
+      saveStreak(computedStreak);
+
+      syncWidgetData({
+        totalMl: updated.totalMl,
+        goalMl: settings.goalMl,
+        streak: computedStreak,
+        lastUpdated: new Date().toISOString(),
+        date,
       });
     },
     [settings.goalMl, weekData]
@@ -190,6 +221,7 @@ export function useWaterData(): WaterDataHook {
     settings,
     streak,
     addWater,
+    removeWater,
     updateSettings,
     resetAllData,
     reload: loadAll,
