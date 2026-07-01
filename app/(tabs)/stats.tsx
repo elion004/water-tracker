@@ -3,8 +3,6 @@ import {
   View,
   Text,
   ScrollView,
-  StyleSheet,
-  useColorScheme,
   Pressable,
   ActivityIndicator,
 } from 'react-native';
@@ -12,50 +10,27 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import { useWaterData } from '@/hooks/useWaterData';
 import { BarChart } from '@/components/BarChart';
-import { colors, typography, spacing, borderRadius } from '@/constants/theme';
-import { formatMl, formatShortDate, getTodayString } from '@/utils/dateHelpers';
+import { colors } from '@/constants/theme';
+import { formatMl, formatShortDate } from '@/utils/dateHelpers';
 import { DayData } from '@/utils/storage';
+import { GlassView, GlassContainer } from '@/components/ui/liquid-glass';
 
 type TabType = '7days' | 'month';
 
-function StatCard({
-  label,
-  value,
-  isDark,
-}: {
-  label: string;
-  value: string;
-  isDark: boolean;
-}) {
-  const cardBg = isDark ? colors.dark.backgroundSecondary : colors.backgroundSecondary;
-  const textPrimary = isDark ? colors.dark.textPrimary : colors.textPrimary;
-  const textSecondary = isDark ? colors.dark.textSecondary : colors.textSecondary;
-
+function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <View style={[styles.statCard, { backgroundColor: cardBg }]}>
-      <Text style={[typography.sectionTitle, { color: textSecondary }]}>{label}</Text>
-      <Text style={[typography.metricMedium, { color: textPrimary, marginTop: spacing.xs }]}>
-        {value}
-      </Text>
-    </View>
+    <GlassView glassEffectStyle="regular" className="flex-1 rounded-2xl p-4">
+      <Text className="text-muted-foreground text-xs font-medium uppercase tracking-wider">{label}</Text>
+      <Text className="text-foreground text-lg font-semibold mt-1">{value}</Text>
+    </GlassView>
   );
 }
 
 export default function StatsScreen() {
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
   const { weekData, settings, streak, reload, isLoading } = useWaterData();
   const [activeTab, setActiveTab] = useState<TabType>('7days');
 
-  useFocusEffect(
-    useCallback(() => {
-      reload();
-    }, [reload])
-  );
-
-  const bgColor = isDark ? colors.dark.background : colors.background;
-  const textPrimary = isDark ? colors.dark.textPrimary : colors.textPrimary;
-  const textSecondary = isDark ? colors.dark.textSecondary : colors.textSecondary;
+  useFocusEffect(useCallback(() => { reload(); }, [reload]));
 
   const displayData = weekData;
 
@@ -77,156 +52,83 @@ export default function StatsScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: bgColor }]}>
+      <SafeAreaView className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
+    <SafeAreaView className="flex-1 bg-background">
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { backgroundColor: bgColor }]}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 24, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Title */}
-        <Text style={[typography.screenTitle, { color: textPrimary, marginBottom: spacing.xl }]}>
-          Verlauf
-        </Text>
+        <Text className="text-foreground text-2xl font-semibold mb-6">Verlauf</Text>
 
-        {/* Tab switcher */}
-        <View
-          style={[
-            styles.tabRow,
-            { borderColor: isDark ? colors.dark.border : colors.border },
-          ]}
-        >
-          {(['7days', 'month'] as TabType[]).map((tab) => (
-            <Pressable
-              key={tab}
-              onPress={() => setActiveTab(tab)}
-              accessibilityRole="tab"
-              accessibilityLabel={tab === '7days' ? '7 Tage' : 'Monat'}
-              style={[
-                styles.tab,
-                activeTab === tab && styles.tabActive,
-              ]}
-            >
-              <Text
-                style={[
-                  typography.body,
-                  {
-                    color: activeTab === tab ? colors.white : textSecondary,
-                    fontWeight: activeTab === tab ? '600' : '400',
-                  },
-                ]}
+        {/* Tab Switcher */}
+        <GlassContainer spacing={2} className="rounded-full self-start mb-6">
+          <View className="flex-row p-1">
+            {(['7days', 'month'] as TabType[]).map((tab) => (
+              <Pressable
+                key={tab}
+                onPress={() => setActiveTab(tab)}
+                accessibilityRole="tab"
+                accessibilityLabel={tab === '7days' ? '7 Tage' : 'Monat'}
               >
-                {tab === '7days' ? '7 Tage' : 'Monat'}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+                <GlassView
+                  glassEffectStyle={activeTab === tab ? 'regular' : 'clear'}
+                  isInteractive
+                  className={`rounded-full px-5 py-2${activeTab === tab ? ' bg-primary/20' : ''}`}
+                >
+                  <Text className={`text-sm font-medium${activeTab === tab ? ' text-primary' : ' text-muted-foreground'}`}>
+                    {tab === '7days' ? '7 Tage' : 'Monat'}
+                  </Text>
+                </GlassView>
+              </Pressable>
+            ))}
+          </View>
+        </GlassContainer>
 
         {/* Chart */}
-        <View style={styles.chartContainer}>
+        <View className="mb-6">
           <BarChart data={displayData} goalMl={settings.goalMl} />
         </View>
 
-        {/* Stats grid */}
-        <View style={styles.statsGrid}>
-          <StatCard
-            label="Ø pro Tag"
-            value={formatMl(stats.avg)}
-            isDark={isDark}
-          />
-          <StatCard
-            label="Ziel erreicht"
-            value={`${stats.goalsReached} / ${stats.total} Tage`}
-            isDark={isDark}
-          />
-          <StatCard
-            label="Bester Tag"
-            value={
-              stats.bestDay && stats.bestDay.totalMl > 0
-                ? `${formatShortDate(stats.bestDay.date)}: ${formatMl(stats.bestDay.totalMl)}`
-                : 'Noch keine Daten'
-            }
-            isDark={isDark}
-          />
-          <StatCard
-            label="Aktueller Streak"
-            value={`${streak} ${streak === 1 ? 'Tag' : 'Tage'}`}
-            isDark={isDark}
-          />
+        {/* Stats Grid */}
+        <View className="gap-3 mb-6">
+          <View className="flex-row gap-3">
+            <StatCard label="Ø pro Tag" value={formatMl(stats.avg)} />
+            <StatCard label="Ziel erreicht" value={`${stats.goalsReached} / ${stats.total} Tage`} />
+          </View>
+          <View className="flex-row gap-3">
+            <StatCard
+              label="Bester Tag"
+              value={
+                stats.bestDay && stats.bestDay.totalMl > 0
+                  ? `${formatShortDate(stats.bestDay.date)}: ${formatMl(stats.bestDay.totalMl)}`
+                  : 'Noch keine Daten'
+              }
+            />
+            <StatCard label="Streak" value={`${streak} ${streak === 1 ? 'Tag' : 'Tage'}`} />
+          </View>
         </View>
 
-        {/* Achievement badge */}
+        {/* Achievement */}
         {streak > 0 && (
-          <View
-            style={[
-              styles.achievementCard,
-              { backgroundColor: isDark ? '#0d2e22' : colors.primaryBg },
-            ]}
-            accessibilityLabel={`Streak: ${streak} Tage`}
+          <GlassView
+            glassEffectStyle="regular"
+            className="rounded-2xl p-4 flex-row items-center justify-between bg-primary/10"
           >
-            <Text style={[typography.metricMedium, { color: colors.primaryDark }]}>
+            <Text className="text-foreground font-medium flex-1 mr-3">
               {streak === 1 ? 'Erster Tag! Der erste Schritt zählt.' : `${streak}-Tage Streak! Weiter so.`}
             </Text>
-            <Text style={styles.badge}>
+            <Text style={{ fontSize: 28 }}>
               {streak >= 7 ? '🏆' : streak >= 3 ? '🥈' : '🥉'}
             </Text>
-          </View>
+          </GlassView>
         )}
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
-  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: 100,
-  },
-  tabRow: {
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderRadius: borderRadius.pill,
-    overflow: 'hidden',
-    marginBottom: spacing.xl,
-    alignSelf: 'flex-start',
-  },
-  tab: {
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.sm,
-  },
-  tabActive: {
-    backgroundColor: colors.primary,
-  },
-  chartContainer: {
-    marginBottom: spacing.xl,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-    marginBottom: spacing.xl,
-  },
-  statCard: {
-    width: '47%',
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-  },
-  achievementCard: {
-    borderRadius: borderRadius.md,
-    padding: spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  badge: {
-    fontSize: 28,
-  },
-});

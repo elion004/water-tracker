@@ -5,7 +5,6 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  useColorScheme,
   Switch,
   Pressable,
   Alert,
@@ -14,41 +13,40 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useWaterData } from '@/hooks/useWaterData';
 import { useNotifications } from '@/hooks/useNotifications';
-import { colors, typography, spacing, borderRadius } from '@/constants/theme';
+import { colors } from '@/constants/theme';
 import { formatMl } from '@/utils/dateHelpers';
+import { GlassView } from '@/components/ui/liquid-glass';
 
 interface StepperProps {
   value: number;
   onDecrement: () => void;
   onIncrement: () => void;
   formatValue?: (v: number) => string;
-  isDark: boolean;
 }
 
-function Stepper({ value, onDecrement, onIncrement, formatValue, isDark }: StepperProps) {
-  const textPrimary = isDark ? colors.dark.textPrimary : colors.textPrimary;
-  const borderCol = isDark ? colors.dark.border : colors.border;
-
+function Stepper({ value, onDecrement, onIncrement, formatValue }: StepperProps) {
   return (
-    <View style={styles.stepper}>
+    <View className="flex-row items-center gap-2">
       <Pressable
         onPress={onDecrement}
-        style={[styles.stepperBtn, { borderColor: borderCol }]}
         accessibilityLabel="Verringern"
         accessibilityRole="button"
       >
-        <Text style={[typography.metricMedium, { color: colors.primary }]}>−</Text>
+        <GlassView glassEffectStyle="regular" isInteractive className="w-8 h-8 rounded-full items-center justify-center">
+          <Text className="text-primary text-lg font-semibold">−</Text>
+        </GlassView>
       </Pressable>
-      <Text style={[typography.body, { color: textPrimary, minWidth: 60, textAlign: 'center' }]}>
+      <Text className="text-foreground min-w-[60px] text-center text-sm">
         {formatValue ? formatValue(value) : String(value)}
       </Text>
       <Pressable
         onPress={onIncrement}
-        style={[styles.stepperBtn, { borderColor: borderCol }]}
         accessibilityLabel="Erhöhen"
         accessibilityRole="button"
       >
-        <Text style={[typography.metricMedium, { color: colors.primary }]}>+</Text>
+        <GlassView glassEffectStyle="regular" isInteractive className="w-8 h-8 rounded-full items-center justify-center">
+          <Text className="text-primary text-lg font-semibold">+</Text>
+        </GlassView>
       </Pressable>
     </View>
   );
@@ -58,23 +56,19 @@ interface RowProps {
   label: string;
   subtitle?: string;
   right?: React.ReactNode;
-  isDark: boolean;
   destructive?: boolean;
   onPress?: () => void;
 }
 
-function Row({ label, subtitle, right, isDark, destructive, onPress }: RowProps) {
-  const textPrimary = isDark ? colors.dark.textPrimary : colors.textPrimary;
-  const textSecondary = isDark ? colors.dark.textSecondary : colors.textSecondary;
-
+function Row({ label, subtitle, right, destructive, onPress }: RowProps) {
   const inner = (
     <View style={styles.row}>
-      <View style={{ flex: 1 }}>
-        <Text style={[typography.body, { color: destructive ? '#E53935' : textPrimary }]}>
+      <View className="flex-1">
+        <Text className={`text-sm${destructive ? ' text-destructive' : ' text-foreground'}`}>
           {label}
         </Text>
         {subtitle ? (
-          <Text style={[typography.label, { color: textSecondary, marginTop: 2 }]}>{subtitle}</Text>
+          <Text className="text-xs text-muted-foreground mt-0.5">{subtitle}</Text>
         ) : null}
       </View>
       {right}
@@ -94,47 +88,34 @@ function Row({ label, subtitle, right, isDark, destructive, onPress }: RowProps)
 interface SectionProps {
   title: string;
   children: React.ReactNode;
-  isDark: boolean;
 }
 
-function Section({ title, children, isDark }: SectionProps) {
-  const textSecondary = isDark ? colors.dark.textSecondary : colors.textSecondary;
-  const cardBg = isDark ? colors.dark.backgroundSecondary : colors.backgroundSecondary;
-  const borderCol = isDark ? colors.dark.border : colors.border;
-
+function Section({ title, children }: SectionProps) {
   return (
-    <View style={styles.section}>
-      <Text style={[typography.sectionTitle, { color: textSecondary, marginBottom: spacing.sm }]}>
+    <View className="mb-6">
+      <Text className="text-muted-foreground text-xs font-medium uppercase tracking-wider mb-2 px-1">
         {title}
       </Text>
-      <View style={[styles.card, { backgroundColor: cardBg }]}>
+      <GlassView glassEffectStyle="regular" className="rounded-2xl overflow-hidden">
         {React.Children.map(children, (child, i) => (
           <>
             {child}
             {i < React.Children.count(children) - 1 && (
-              <View style={[styles.divider, { backgroundColor: borderCol }]} />
+              <View className="h-px bg-border/50 ml-4" />
             )}
           </>
         ))}
-      </View>
+      </GlassView>
     </View>
   );
 }
 
 export default function SettingsScreen() {
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
   const { settings, updateSettings, resetAllData, reload, isLoading } = useWaterData();
 
-  useFocusEffect(
-    useCallback(() => {
-      reload();
-    }, [reload])
-  );
-  const { enableReminders, disableReminders, updateSchedule } = useNotifications();
+  useFocusEffect(useCallback(() => { reload(); }, [reload]));
 
-  const bgColor = isDark ? colors.dark.background : colors.background;
-  const textPrimary = isDark ? colors.dark.textPrimary : colors.textPrimary;
+  const { enableReminders, disableReminders, updateSchedule } = useNotifications();
 
   const handleGoalChange = useCallback(
     (delta: number) => {
@@ -166,9 +147,7 @@ export default function SettingsScreen() {
     async (value: boolean) => {
       if (value) {
         const granted = await enableReminders({ ...settings, reminderEnabled: true });
-        if (granted) {
-          updateSettings({ reminderEnabled: true });
-        }
+        if (granted) updateSettings({ reminderEnabled: true });
       } else {
         await disableReminders();
         updateSettings({ reminderEnabled: false });
@@ -192,70 +171,54 @@ export default function SettingsScreen() {
       'Deine gesamte Trinkhistorie und Einstellungen werden unwiderruflich gelöscht.',
       [
         { text: 'Abbrechen', style: 'cancel' },
-        {
-          text: 'Zurücksetzen',
-          style: 'destructive',
-          onPress: async () => {
-            await resetAllData();
-          },
-        },
+        { text: 'Zurücksetzen', style: 'destructive', onPress: async () => { await resetAllData(); } },
       ]
     );
   }, [resetAllData]);
 
-  const formatInterval = (v: number) => {
-    if (v < 1) return '30 min';
-    return `${v}h`;
-  };
+  const formatInterval = (v: number) => (v < 1 ? '30 min' : `${v}h`);
 
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: bgColor }]}>
+      <SafeAreaView className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
+    <SafeAreaView className="flex-1 bg-background">
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { backgroundColor: bgColor }]}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 24, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[typography.screenTitle, { color: textPrimary, marginBottom: spacing.xl }]}>
-          Einstellungen
-        </Text>
+        <Text className="text-foreground text-2xl font-semibold mb-6">Einstellungen</Text>
 
-        {/* Tagesziel */}
-        <Section title="Tagesziel" isDark={isDark}>
+        <Section title="Tagesziel">
           <Row
             label="Tagesziel"
             subtitle="Empfohlen: 2.0L"
-            isDark={isDark}
             right={
               <Stepper
                 value={settings.goalMl}
                 onDecrement={() => handleGoalChange(-250)}
                 onIncrement={() => handleGoalChange(250)}
                 formatValue={formatMl}
-                isDark={isDark}
               />
             }
           />
         </Section>
 
-        {/* Erinnerungen */}
-        <Section title="Erinnerungen" isDark={isDark}>
+        <Section title="Erinnerungen">
           <Row
             label="Erinnerungen"
             subtitle="Push-Benachrichtigungen"
-            isDark={isDark}
             right={
               <Switch
                 value={settings.reminderEnabled}
                 onValueChange={handleReminderToggle}
-                trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor={colors.white}
+                trackColor={{ false: 'rgba(0,0,0,0.1)', true: colors.primary }}
+                thumbColor="#fff"
                 accessibilityLabel="Erinnerungen aktivieren"
               />
             }
@@ -263,59 +226,47 @@ export default function SettingsScreen() {
           <Row
             label="Intervall"
             subtitle="Wie oft erinnern?"
-            isDark={isDark}
             right={
               <Stepper
                 value={settings.reminderIntervalHours}
                 onDecrement={() => handleIntervalChange(-0.5)}
                 onIncrement={() => handleIntervalChange(0.5)}
                 formatValue={formatInterval}
-                isDark={isDark}
               />
             }
           />
           <Row
             label="Nicht stören"
             subtitle={`${settings.doNotDisturbFrom} – ${settings.doNotDisturbTo}`}
-            isDark={isDark}
             right={
               <Switch
                 value={settings.doNotDisturbEnabled}
                 onValueChange={handleDndToggle}
-                trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor={colors.white}
+                trackColor={{ false: 'rgba(0,0,0,0.1)', true: colors.primary }}
+                thumbColor="#fff"
                 accessibilityLabel="Nicht stören aktivieren"
               />
             }
           />
         </Section>
 
-        {/* Becher */}
-        <Section title="Becher" isDark={isDark}>
+        <Section title="Becher">
           <Row
             label="Standardgröße"
             subtitle="Schnellzugabe (mittlerer Button)"
-            isDark={isDark}
             right={
               <Stepper
                 value={settings.customCupSizeMl}
                 onDecrement={() => handleCupChange(-50)}
                 onIncrement={() => handleCupChange(50)}
                 formatValue={formatMl}
-                isDark={isDark}
               />
             }
           />
         </Section>
 
-        {/* Daten */}
-        <Section title="Daten" isDark={isDark}>
-          <Row
-            label="Alle Daten zurücksetzen"
-            isDark={isDark}
-            destructive
-            onPress={handleReset}
-          />
+        <Section title="Daten">
+          <Row label="Alle Daten zurücksetzen" destructive onPress={handleReset} />
         </Section>
       </ScrollView>
     </SafeAreaView>
@@ -323,42 +274,11 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
-  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: 100,
-  },
-  section: {
-    marginBottom: spacing.xl,
-  },
-  card: {
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     minHeight: 56,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    marginLeft: spacing.lg,
-  },
-  stepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  stepperBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: borderRadius.circle,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

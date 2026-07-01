@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { useColorScheme, Platform } from 'react-native';
+import { useColorScheme, Platform, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/constants/theme';
 
@@ -8,26 +8,23 @@ export default function TabLayout() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
 
-  const activeColor = colors.primary;
-  const inactiveColor = isDark ? colors.dark.textSecondary : colors.textSecondary;
-  const bgColor = isDark ? colors.dark.background : colors.background;
-  const borderColor = isDark ? colors.dark.border : colors.border;
-
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: activeColor,
-        tabBarInactiveTintColor: inactiveColor,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)',
         tabBarStyle: {
-          backgroundColor: bgColor,
-          borderTopColor: borderColor,
-          borderTopWidth: 0.5,
-          elevation: Platform.OS === 'android' ? 4 : 0,
+          position: 'absolute',
+          backgroundColor: isDark ? 'rgba(10,10,10,0.85)' : 'rgba(255,255,255,0.85)',
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+          elevation: 0,
           shadowOpacity: 0,
         },
         tabBarLabelStyle: {
           fontSize: 10,
+          fontWeight: '500',
         },
       }}
     >

@@ -4,7 +4,6 @@ import {
   View,
   Text,
   ScrollView,
-  StyleSheet,
   useColorScheme,
   Animated,
   Alert,
@@ -12,26 +11,23 @@ import {
   Modal,
   Pressable,
   ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useWaterData } from '@/hooks/useWaterData';
 import { ProgressRing } from '@/components/ProgressRing';
-import { QuickAddButton } from '@/components/QuickAddButton';
 import { StreakCard } from '@/components/StreakCard';
-import { colors, typography, spacing, borderRadius } from '@/constants/theme';
+import { colors } from '@/constants/theme';
 import * as Haptics from 'expo-haptics';
 import { formatDisplayDate, getGreeting, getTodayString } from '@/utils/dateHelpers';
+import { GlassView, GlassContainer } from '@/components/ui/liquid-glass';
 
 export default function HomeScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const { todayData, settings, streak, addWater, removeWater, reload, isLoading } = useWaterData();
 
-  useFocusEffect(
-    useCallback(() => {
-      reload();
-    }, [reload])
-  );
+  useFocusEffect(useCallback(() => { reload(); }, [reload]));
 
   const [customModalVisible, setCustomModalVisible] = useState(false);
   const [customAmount, setCustomAmount] = useState('');
@@ -42,10 +38,6 @@ export default function HomeScreen() {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastEntryRef = useRef<{ id: string; date: string } | null>(null);
 
-  const bgColor = isDark ? colors.dark.background : colors.background;
-  const textPrimary = isDark ? colors.dark.textPrimary : colors.textPrimary;
-  const textSecondary = isDark ? colors.dark.textSecondary : colors.textSecondary;
-
   const hideToast = useCallback(() => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true }).start(
@@ -53,23 +45,18 @@ export default function HomeScreen() {
     );
   }, [toastOpacity, toastTranslateY]);
 
-  const showToast = useCallback(
-    (text: string) => {
-      setToastText(text);
-      if (toastTimer.current) clearTimeout(toastTimer.current);
-
-      Animated.parallel([
-        Animated.timing(toastOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
-        Animated.timing(toastTranslateY, { toValue: 0, duration: 220, useNativeDriver: true }),
-      ]).start();
-
-      toastTimer.current = setTimeout(() => {
-        hideToast();
-        lastEntryRef.current = null;
-      }, 2500);
-    },
-    [toastOpacity, toastTranslateY, hideToast]
-  );
+  const showToast = useCallback((text: string) => {
+    setToastText(text);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    Animated.parallel([
+      Animated.timing(toastOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
+      Animated.timing(toastTranslateY, { toValue: 0, duration: 220, useNativeDriver: true }),
+    ]).start();
+    toastTimer.current = setTimeout(() => {
+      hideToast();
+      lastEntryRef.current = null;
+    }, 2500);
+  }, [toastOpacity, toastTranslateY, hideToast]);
 
   const handleUndo = useCallback(async () => {
     const last = lastEntryRef.current;
@@ -79,14 +66,12 @@ export default function HomeScreen() {
     await removeWater(last.date, last.id);
   }, [hideToast, removeWater]);
 
-  const handleAdd = useCallback(
-    async (ml: number) => {
-      const entry = await addWater(ml);
-      lastEntryRef.current = { id: entry.id, date: getTodayString() };
-      showToast(`+${ml}ml hinzugefügt!`);
-    },
-    [addWater, showToast]
-  );
+  const handleAdd = useCallback(async (ml: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const entry = await addWater(ml);
+    lastEntryRef.current = { id: entry.id, date: getTodayString() };
+    showToast(`+${ml}ml hinzugefügt!`);
+  }, [addWater, showToast]);
 
   const handleCustomAdd = useCallback(() => {
     const ml = parseInt(customAmount, 10);
@@ -94,7 +79,6 @@ export default function HomeScreen() {
       Alert.alert('Ungültige Menge', 'Bitte gib eine Menge zwischen 1 und 5000 ml ein.');
       return;
     }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setCustomModalVisible(false);
     setCustomAmount('');
     handleAdd(ml);
@@ -103,92 +87,87 @@ export default function HomeScreen() {
   const goalReached = todayData.totalMl >= settings.goalMl;
   const remaining = Math.max(settings.goalMl - todayData.totalMl, 0);
   const today = getTodayString();
+  const quickAmounts = [150, settings.customCupSizeMl, 500];
 
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: bgColor }]}>
+      <SafeAreaView className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
+    <SafeAreaView className="flex-1 bg-background">
       <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={[styles.scrollContent, { backgroundColor: bgColor }]}
+        className="flex-1"
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={[typography.screenTitle, { color: textPrimary }]}>{getGreeting()}</Text>
-          <Text style={[typography.body, { color: textSecondary, marginTop: spacing.xs }]}>
-            {formatDisplayDate(today)}
-          </Text>
+        <View className="mb-6">
+          <Text className="text-foreground text-2xl font-semibold">{getGreeting()}</Text>
+          <Text className="text-muted-foreground text-sm mt-1">{formatDisplayDate(today)}</Text>
         </View>
 
         {/* Progress Ring */}
-        <View style={styles.ringContainer}>
+        <View className="items-center mb-8">
           <ProgressRing currentMl={todayData.totalMl} goalMl={settings.goalMl} />
         </View>
 
         {/* Quick Add Buttons */}
-        <View style={styles.quickButtonsRow}>
-          <QuickAddButton
-            label="+150ml"
-            onPress={() => handleAdd(150)}
-            accessibilityLabel="150 ml hinzufügen"
-          />
-          <QuickAddButton
-            label={`+${settings.customCupSizeMl}ml`}
-            onPress={() => handleAdd(settings.customCupSizeMl)}
-            accessibilityLabel={`${settings.customCupSizeMl} ml hinzufügen`}
-          />
-          <QuickAddButton
-            label="+500ml"
-            onPress={() => handleAdd(500)}
-            accessibilityLabel="500 ml hinzufügen"
-          />
-        </View>
+        <GlassContainer spacing={4} className="rounded-3xl mb-3">
+          <View className="flex-row gap-2 p-2">
+            {quickAmounts.map((ml) => (
+              <Pressable
+                key={ml}
+                className="flex-1"
+                onPress={() => handleAdd(ml)}
+                accessibilityLabel={`${ml} ml hinzufügen`}
+                accessibilityRole="button"
+              >
+                <GlassView
+                  glassEffectStyle="regular"
+                  isInteractive
+                  className="rounded-2xl py-5 items-center"
+                >
+                  <Text className="text-foreground font-semibold text-sm">+{ml}ml</Text>
+                </GlassView>
+              </Pressable>
+            ))}
+          </View>
+        </GlassContainer>
 
-        {/* Custom amount */}
+        {/* Custom Amount */}
         <Pressable
           onPress={() => setCustomModalVisible(true)}
+          className="mb-6"
           accessibilityLabel="Eigene Menge hinzufügen"
           accessibilityRole="button"
-          style={({ pressed }) => [
-            styles.customButton,
-            {
-              backgroundColor: pressed ? colors.primaryBg : 'transparent',
-              borderColor: pressed ? colors.primary : isDark ? colors.dark.border : colors.border,
-            },
-          ]}
         >
-          <Text style={[typography.body, { color: colors.primary }]}>+ Eigene Menge</Text>
+          <GlassView glassEffectStyle="clear" isInteractive className="rounded-2xl py-4 items-center">
+            <Text className="text-primary font-medium">+ Eigene Menge</Text>
+          </GlassView>
         </Pressable>
 
-        {/* Streak & Info Cards */}
-        <View style={styles.section}>
-          <StreakCard streak={streak} remaining={remaining} goalReached={goalReached} />
-        </View>
+        {/* Streak Cards */}
+        <StreakCard streak={streak} remaining={remaining} goalReached={goalReached} />
       </ScrollView>
 
       {/* Toast */}
       <Animated.View
         style={[
           styles.toast,
-          {
-            opacity: toastOpacity,
-            transform: [{ translateY: toastTranslateY }],
-          },
+          { opacity: toastOpacity, transform: [{ translateY: toastTranslateY }] },
         ]}
+        pointerEvents="box-none"
       >
-        <Text style={[typography.body, { color: colors.primaryBg, fontWeight: '500' }]}>
-          {toastText}
-        </Text>
-        <Pressable onPress={handleUndo} hitSlop={8}>
-          <Text style={styles.undoText}>Rückgängig</Text>
-        </Pressable>
+        <GlassView glassEffectStyle="regular" className="rounded-full px-6 py-3 flex-row items-center gap-4">
+          <Text className="text-foreground font-medium">{toastText}</Text>
+          <Pressable onPress={handleUndo} hitSlop={8}>
+            <Text className="text-primary font-bold text-sm">Rückgängig</Text>
+          </Pressable>
+        </GlassView>
       </Animated.View>
 
       {/* Custom Amount Modal */}
@@ -203,59 +182,49 @@ export default function HomeScreen() {
           onPress={() => setCustomModalVisible(false)}
           accessibilityLabel="Modal schliessen"
         >
-          <Pressable
-            style={[
-              styles.modalContent,
-              { backgroundColor: isDark ? colors.dark.backgroundSecondary : colors.background },
-            ]}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <Text style={[typography.screenTitle, { color: textPrimary, marginBottom: spacing.lg }]}>
-              Menge eingeben
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  color: textPrimary,
-                  borderColor: isDark ? colors.dark.border : colors.border,
-                  backgroundColor: isDark ? colors.dark.background : colors.backgroundSecondary,
-                },
-              ]}
-              placeholder="Menge in ml"
-              placeholderTextColor={textSecondary}
-              keyboardType="numeric"
-              value={customAmount}
-              onChangeText={setCustomAmount}
-              autoFocus
-              accessibilityLabel="Menge in Millilitern"
-            />
-            <View style={styles.modalButtons}>
-              <Pressable
-                onPress={() => {
-                  setCustomModalVisible(false);
-                  setCustomAmount('');
-                }}
+          <Pressable onPress={(e) => e.stopPropagation()} style={styles.modalWrapper}>
+            <GlassView glassEffectStyle="regular" className="rounded-3xl p-6 w-full">
+              <Text className="text-foreground text-xl font-semibold mb-4">Menge eingeben</Text>
+              <TextInput
                 style={[
-                  styles.modalBtn,
-                  { borderColor: isDark ? colors.dark.border : colors.border },
+                  styles.input,
+                  {
+                    color: isDark ? '#F0F0F0' : '#1A1A1A',
+                    borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)',
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                  },
                 ]}
-                accessibilityLabel="Abbrechen"
-                accessibilityRole="button"
-              >
-                <Text style={[typography.body, { color: textSecondary }]}>Abbrechen</Text>
-              </Pressable>
-              <Pressable
-                onPress={handleCustomAdd}
-                style={[styles.modalBtn, styles.modalBtnPrimary]}
-                accessibilityLabel="Menge hinzufügen"
-                accessibilityRole="button"
-              >
-                <Text style={[typography.body, { color: colors.white, fontWeight: '600' }]}>
-                  Hinzufügen
-                </Text>
-              </Pressable>
-            </View>
+                placeholder="Menge in ml"
+                placeholderTextColor={isDark ? '#666' : '#999'}
+                keyboardType="numeric"
+                value={customAmount}
+                onChangeText={setCustomAmount}
+                autoFocus
+                accessibilityLabel="Menge in Millilitern"
+              />
+              <View className="flex-row gap-3">
+                <Pressable
+                  onPress={() => { setCustomModalVisible(false); setCustomAmount(''); }}
+                  className="flex-1"
+                  accessibilityLabel="Abbrechen"
+                  accessibilityRole="button"
+                >
+                  <GlassView glassEffectStyle="clear" isInteractive className="rounded-2xl py-3 items-center">
+                    <Text className="text-muted-foreground font-medium">Abbrechen</Text>
+                  </GlassView>
+                </Pressable>
+                <Pressable
+                  onPress={handleCustomAdd}
+                  className="flex-1"
+                  accessibilityLabel="Menge hinzufügen"
+                  accessibilityRole="button"
+                >
+                  <GlassView glassEffectStyle="regular" isInteractive className="rounded-2xl py-3 items-center bg-primary/20">
+                    <Text className="text-primary font-semibold">Hinzufügen</Text>
+                  </GlassView>
+                </Pressable>
+              </View>
+            </GlassView>
           </Pressable>
         </Pressable>
       </Modal>
@@ -264,84 +233,32 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
-  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
+    paddingHorizontal: 16,
+    paddingTop: 24,
     paddingBottom: 100,
-  },
-  header: {
-    marginBottom: spacing.xl,
-  },
-  ringContainer: {
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  quickButtonsRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginBottom: spacing.md,
-  },
-  customButton: {
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  section: {
-    marginBottom: spacing.lg,
   },
   toast: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 88,
     alignSelf: 'center',
-    backgroundColor: colors.primaryDark,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.pill,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  undoText: {
-    color: colors.white,
-    fontWeight: '700',
-    fontSize: 13,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 24,
   },
-  modalContent: {
-    width: '80%',
-    borderRadius: borderRadius.lg,
-    padding: spacing.xl,
+  modalWrapper: {
+    width: '100%',
   },
   input: {
     borderWidth: 1,
-    borderRadius: borderRadius.sm,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     fontSize: 16,
-    marginBottom: spacing.lg,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  modalBtn: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  modalBtnPrimary: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    marginBottom: 16,
   },
 });

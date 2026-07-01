@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, useColorScheme } from 'react-native';
-import { colors, typography, spacing, borderRadius } from '@/constants/theme';
+import { View, Text } from 'react-native';
 import { formatMl } from '@/utils/dateHelpers';
+import { GlassView } from '@/components/ui/liquid-glass';
 
 interface StreakCardProps {
   streak: number;
@@ -10,47 +10,29 @@ interface StreakCardProps {
 }
 
 export function StreakCard({ streak, remaining, goalReached }: StreakCardProps) {
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
-  const cardBg = isDark ? colors.dark.backgroundSecondary : colors.backgroundSecondary;
-  const textPrimary = isDark ? colors.dark.textPrimary : colors.textPrimary;
-  const textSecondary = isDark ? colors.dark.textSecondary : colors.textSecondary;
-
   return (
-    <View style={styles.row}>
-      {/* Streak */}
-      <View
-        style={[styles.card, { backgroundColor: cardBg }]}
+    <View className="flex-row gap-3">
+      <GlassView
+        glassEffectStyle="regular"
+        className="flex-1 rounded-2xl p-4"
         accessibilityLabel={`Streak: ${streak} Tage`}
       >
-        <Text style={[typography.sectionTitle, { color: textSecondary }]}>Streak</Text>
-        <Text style={[typography.metricMedium, { color: textPrimary, marginTop: spacing.xs }]}>
+        <Text className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Streak</Text>
+        <Text className="text-foreground text-lg font-semibold mt-1">
           🔥 {streak} {streak === 1 ? 'Tag' : 'Tage'}
         </Text>
-      </View>
+      </GlassView>
 
-      {/* Remaining */}
-      <View
-        style={[styles.card, { backgroundColor: cardBg }]}
+      <GlassView
+        glassEffectStyle="regular"
+        className="flex-1 rounded-2xl p-4"
         accessibilityLabel={goalReached ? 'Tagesziel erreicht' : `Noch ${formatMl(remaining)} bis zum Ziel`}
       >
-        <Text style={[typography.sectionTitle, { color: textSecondary }]}>Heute noch</Text>
-        <Text style={[typography.metricMedium, { color: textPrimary, marginTop: spacing.xs }]}>
+        <Text className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Heute noch</Text>
+        <Text className="text-foreground text-lg font-semibold mt-1">
           {goalReached ? '✅ Geschafft!' : formatMl(remaining)}
         </Text>
-      </View>
+      </GlassView>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  card: {
-    flex: 1,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-  },
-});
