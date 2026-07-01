@@ -13,7 +13,7 @@ export default function RootLayout() {
   return (
     <SafeAreaListener onChange={({ insets }) => Uniwind.updateInsets(insets)}>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <GluestackUIProvider mode={scheme === 'dark' ? 'dark' : 'light'}>
+        <GluestackUIProvider mode="system">
           <SafeAreaProvider>
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
