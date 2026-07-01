@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, Animated, useColorScheme, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
-import { colors, typography } from '@/constants/theme';
+import { colors } from '@/constants/theme';
 import { formatMl } from '@/utils/dateHelpers';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -49,28 +49,25 @@ export function ProgressRing({
   });
 
   const goalReached = currentMl >= goalMl;
-  const textColor = isDark ? colors.dark.textPrimary : colors.textPrimary;
-  const secondaryColor = isDark ? colors.dark.textSecondary : colors.textSecondary;
-  const trackColor = isDark ? colors.dark.border : colors.border;
+  const primaryColor = isDark ? colors.dark.primary : colors.primary;
+  const trackStroke = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
 
   return (
     <View style={styles.container}>
       <Svg width={size} height={size} style={styles.svg}>
-        {/* Track */}
         <Circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={trackColor}
+          stroke={trackStroke}
           strokeWidth={strokeWidth}
           fill="none"
         />
-        {/* Progress */}
         <AnimatedCircle
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={colors.primary}
+          stroke={primaryColor}
           strokeWidth={strokeWidth}
           fill="none"
           strokeDasharray={`${circumference} ${circumference}`}
@@ -82,15 +79,15 @@ export function ProgressRing({
       </Svg>
 
       <View style={[styles.labelContainer, { width: size, height: size }]}>
-        <Text style={[typography.metricLarge, { color: goalReached ? colors.primary : textColor }]}>
+        <Text className={`text-[28px] font-semibold${goalReached ? ' text-primary' : ' text-foreground'}`}>
           {formatMl(currentMl)}
         </Text>
         {goalReached ? (
-          <Text style={[typography.label, { color: colors.primary, marginTop: 2 }]}>
+          <Text className="text-xs text-primary mt-0.5">
             Ziel erreicht! 🎉
           </Text>
         ) : (
-          <Text style={[typography.label, { color: secondaryColor, marginTop: 2 }]}>
+          <Text className="text-xs text-muted-foreground mt-0.5">
             von {formatMl(goalMl)}
           </Text>
         )}

@@ -5,6 +5,7 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
+  useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
@@ -27,6 +28,8 @@ function StatCard({ label, value }: { label: string; value: string }) {
 }
 
 export default function StatsScreen() {
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
   const { weekData, settings, streak, reload, isLoading } = useWaterData();
   const [activeTab, setActiveTab] = useState<TabType>('7days');
 
@@ -53,7 +56,7 @@ export default function StatsScreen() {
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={isDark ? '#4FC89E' : colors.primary} />
       </SafeAreaView>
     );
   }

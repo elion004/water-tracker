@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Animated, StyleSheet, useColorScheme, Pressable } from 'react-native';
 import { DayData } from '@/utils/storage';
 import { formatShortWeekday, getTodayString } from '@/utils/dateHelpers';
-import { colors, typography, spacing } from '@/constants/theme';
+import { colors, spacing } from '@/constants/theme';
 import { formatMl } from '@/utils/dateHelpers';
 
 interface BarChartProps {
@@ -26,7 +26,7 @@ function Bar({ day, goalMl, isToday, isSelected, index, onPress }: BarProps) {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const fillRatio = Math.min(day.totalMl / goalMl, 1);
-  const targetHeight = Math.max(fillRatio * CHART_HEIGHT, day.totalMl > 0 ? MIN_BAR_HEIGHT : MIN_BAR_HEIGHT);
+  const targetHeight = Math.max(fillRatio * CHART_HEIGHT, MIN_BAR_HEIGHT);
   const heightAnim = useRef(new Animated.Value(0)).current;
   const labelOpacity = useRef(new Animated.Value(0)).current;
   const labelTranslate = useRef(new Animated.Value(6)).current;
@@ -54,22 +54,35 @@ function Bar({ day, goalMl, isToday, isSelected, index, onPress }: BarProps) {
     }
   }, [isSelected, labelOpacity, labelTranslate]);
 
-  const barColor = isSelected ? colors.primaryDark : isToday ? colors.primary : colors.primaryLight;
-  const labelColor = isToday || isSelected ? colors.primary : isDark ? colors.dark.textSecondary : colors.textSecondary;
-  const labelWeight = isToday || isSelected ? '600' : '400';
+  const barColor = isDark
+    ? isSelected ? '#6DE6B8' : isToday ? colors.dark.primary : 'rgba(79,200,158,0.35)'
+    : isSelected ? colors.primaryDark : isToday ? colors.primary : colors.primaryLight;
+
+  const tooltipBg = isDark ? colors.dark.primary : colors.primaryDark;
+  const tooltipTextColor = isDark ? '#0A0A0A' : '#fff';
   const label = formatShortWeekday(day.date);
 
   return (
-    <Pressable style={styles.barWrapper} onPress={onPress} accessibilityRole="button" accessibilityLabel={`${label}: ${formatMl(day.totalMl)}`}>
-      {/* Tooltip */}
+    <Pressable
+      style={styles.barWrapper}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${label}: ${formatMl(day.totalMl)}`}
+    >
       <Animated.View
         style={[
           styles.tooltip,
-          { opacity: labelOpacity, transform: [{ translateY: labelTranslate }] },
+          {
+            opacity: labelOpacity,
+            transform: [{ translateY: labelTranslate }],
+            backgroundColor: tooltipBg,
+          },
         ]}
         pointerEvents="none"
       >
-        <Text style={styles.tooltipText}>{formatMl(day.totalMl)}</Text>
+        <Text style={[styles.tooltipText, { color: tooltipTextColor }]}>
+          {formatMl(day.totalMl)}
+        </Text>
       </Animated.View>
 
       <View style={styles.barContainer}>
@@ -84,11 +97,13 @@ function Bar({ day, goalMl, isToday, isSelected, index, onPress }: BarProps) {
           ]}
         />
       </View>
+
       <Text
-        style={[
-          typography.small,
-          { color: labelColor, fontWeight: labelWeight, marginTop: spacing.xs },
-        ]}
+        className={
+          isToday || isSelected
+            ? 'text-[10px] font-semibold text-primary mt-1'
+            : 'text-[10px] text-muted-foreground mt-1'
+        }
       >
         {label}
       </Text>
@@ -97,10 +112,7 @@ function Bar({ day, goalMl, isToday, isSelected, index, onPress }: BarProps) {
 }
 
 export function BarChart({ data, goalMl }: BarChartProps) {
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
   const today = getTodayString();
-  const labelColor = isDark ? colors.dark.textSecondary : colors.textSecondary;
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const handlePress = (date: string) => {
@@ -109,15 +121,13 @@ export function BarChart({ data, goalMl }: BarChartProps) {
 
   return (
     <View style={styles.root}>
-      {/* Y-axis labels */}
       <View style={styles.yAxis}>
-        <Text style={[typography.small, { color: labelColor }]}>
+        <Text className="text-[10px] text-muted-foreground">
           {(goalMl / 1000).toFixed(1)}L
         </Text>
-        <Text style={[typography.small, { color: labelColor }]}>0L</Text>
+        <Text className="text-[10px] text-muted-foreground">0L</Text>
       </View>
 
-      {/* Bars */}
       <View style={styles.barsArea}>
         {data.map((day, i) => (
           <Bar
@@ -139,14 +149,14 @@ const styles = StyleSheet.create({
   root: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    height: CHART_HEIGHT + 32 + 28, // extra space for tooltip
+    height: CHART_HEIGHT + 32 + 28,
   },
   yAxis: {
     height: CHART_HEIGHT,
     justifyContent: 'space-between',
     alignItems: 'flex-end',
     marginRight: spacing.sm,
-    marginTop: 28, // align with chart after tooltip space
+    marginTop: 28,
   },
   barsArea: {
     flex: 1,
@@ -160,7 +170,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   tooltip: {
-    backgroundColor: colors.primaryDark,
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 3,
@@ -169,7 +178,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tooltipText: {
-    color: '#fff',
     fontSize: 10,
     fontWeight: '600',
   },

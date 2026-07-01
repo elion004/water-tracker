@@ -15,10 +15,11 @@ export const colors = {
   white: '#FFFFFF',
 
   dark: {
+    primary: '#4FC89E',
     background: '#121212',
     backgroundSecondary: '#1E1E1E',
-    textPrimary: '#F0F0F0',
-    textSecondary: '#999999',
+    textPrimary: '#FAFAFA',
+    textSecondary: '#A1A1A1',
     border: 'rgba(255,255,255,0.12)',
   },
 };

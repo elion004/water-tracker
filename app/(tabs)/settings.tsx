@@ -9,6 +9,7 @@ import {
   Pressable,
   Alert,
   ActivityIndicator,
+  useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useWaterData } from '@/hooks/useWaterData';
@@ -111,6 +112,8 @@ function Section({ title, children }: SectionProps) {
 }
 
 export default function SettingsScreen() {
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
   const { settings, updateSettings, resetAllData, reload, isLoading } = useWaterData();
 
   useFocusEffect(useCallback(() => { reload(); }, [reload]));
@@ -181,7 +184,7 @@ export default function SettingsScreen() {
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={isDark ? colors.dark.primary : colors.primary} />
       </SafeAreaView>
     );
   }
@@ -217,7 +220,7 @@ export default function SettingsScreen() {
               <Switch
                 value={settings.reminderEnabled}
                 onValueChange={handleReminderToggle}
-                trackColor={{ false: 'rgba(0,0,0,0.1)', true: colors.primary }}
+                trackColor={{ false: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', true: isDark ? colors.dark.primary : colors.primary }}
                 thumbColor="#fff"
                 accessibilityLabel="Erinnerungen aktivieren"
               />
@@ -242,7 +245,7 @@ export default function SettingsScreen() {
               <Switch
                 value={settings.doNotDisturbEnabled}
                 onValueChange={handleDndToggle}
-                trackColor={{ false: 'rgba(0,0,0,0.1)', true: colors.primary }}
+                trackColor={{ false: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', true: isDark ? colors.dark.primary : colors.primary }}
                 thumbColor="#fff"
                 accessibilityLabel="Nicht stören aktivieren"
               />

@@ -92,7 +92,7 @@ export default function HomeScreen() {
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={isDark ? '#4FC89E' : colors.primary} />
       </SafeAreaView>
     );
   }
@@ -189,13 +189,13 @@ export default function HomeScreen() {
                 style={[
                   styles.input,
                   {
-                    color: isDark ? '#F0F0F0' : '#1A1A1A',
+                    color: isDark ? '#FAFAFA' : '#0A0A0A',
                     borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)',
                     backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
                   },
                 ]}
                 placeholder="Menge in ml"
-                placeholderTextColor={isDark ? '#666' : '#999'}
+                placeholderTextColor={isDark ? '#A1A1A1' : '#737373'}
                 keyboardType="numeric"
                 value={customAmount}
                 onChangeText={setCustomAmount}
